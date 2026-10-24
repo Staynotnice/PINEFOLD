@@ -211,7 +211,7 @@ function grassTex() {
   return tex;
 }
 
-type Tree = {type Tree = {
+type Tree = {
   kind: "pine" | "hard";
   x: number;
   z: number;
@@ -596,7 +596,7 @@ export function mountPine(
     return materialTexture(c,2,2);
   }
 
-  const barkTex = barkTexture();  const barkTex = barkTexture();
+  const barkTex = barkTexture();
   const leafTex = foliageTexture();
   const plankTex = plankTexture();
   const fabricTex = fabricTexture();
