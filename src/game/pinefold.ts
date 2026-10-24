@@ -132,16 +132,27 @@ function grassTex() {
   c.height = 1024;
   const g = c.getContext("2d");
   if (!g) return new THREE.CanvasTexture(c);
-  g.fillStyle = "#3c9148";
+  g.fillStyle = "#456f42";
   g.fillRect(0, 0, 1024, 1024);
-  for (let i = 0; i < 420; i++) {
+  for (let i = 0; i < 540; i++) {
     const x = Math.random() * 1024;
     const y = Math.random() * 1024;
-    const r = 18 + Math.random() * 70;
-    g.fillStyle = Math.random() > 0.5 ? "rgba(70,160,82,0.45)" : "rgba(36,110,52,0.35)";
+    const r = 12 + Math.random() * 66;
+    g.fillStyle = Math.random() > 0.5 ? "rgba(100,146,77,0.25)" : "rgba(27,75,41,0.18)";
     g.beginPath();
     g.arc(x, y, r, 0, Math.PI * 2);
     g.fill();
+  }
+  // Fine grass flecks give the ground texture depth without making it noisy at distance.
+  for (let i = 0; i < 1900; i++) {
+    const x = Math.random() * 1024;
+    const y = Math.random() * 1024;
+    g.strokeStyle = Math.random() > 0.5 ? "rgba(176,190,108,0.20)" : "rgba(21,68,35,0.22)";
+    g.lineWidth = 0.7 + Math.random() * 0.8;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + (Math.random() - 0.5) * 3, y - (1 + Math.random() * 5));
+    g.stroke();
   }
   const toPx = (x: number, z: number) => [(x / 100 + 0.5) * 1024, (z / 100 + 0.5) * 1024];
   g.fillStyle = "#c4a36a";
@@ -378,6 +389,12 @@ export function mountPine(
       upper.add(a, b);
     }
     upper.scale.setScalar(scale);
+    upper.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
     root.add(upper);
     scene.add(root);
     const max = kind === "hard" ? 6 : 3;
@@ -622,6 +639,17 @@ export function mountPine(
   creek.rotation.x = -Math.PI / 2;
   creek.position.set(22, 0.05, 6);
   scene.add(creek);
+  const waterGlints: THREE.Mesh[] = [];
+  const glintMat = trackM(new THREE.MeshBasicMaterial({ color: 0xc4f3f0, transparent: true, opacity: 0.24, depthWrite: false }));
+  for (let i = 0; i < 8; i++) {
+    const glint = new THREE.Mesh(trackG(new THREE.PlaneGeometry(0.28 + rnd() * 0.42, 0.035 + rnd() * 0.035)), glintMat);
+    glint.rotation.x = -Math.PI / 2;
+    glint.position.set(21.1 + rnd() * 1.8, 0.062, -1.5 + i * 2.0);
+    glint.userData.speed = 0.15 + rnd() * 0.25;
+    glint.userData.offset = rnd() * Math.PI * 2;
+    scene.add(glint);
+    waterGlints.push(glint);
+  }
   const creekWheel = new THREE.Mesh(trackG(new THREE.TorusGeometry(0.7, 0.08, 6, 14)), woodMat);
   creekWheel.position.set(20.4, 0.9, 6);
   scene.add(creekWheel);
@@ -1192,6 +1220,13 @@ export function mountPine(
     refreshProps();
     if (saw && stock > 0) blade.rotation.z += dt * 8;
     if (creekWheel.visible) creekWheel.rotation.z += dt * (stock > 0 ? 1.4 : 0.2);
+    for (const glint of waterGlints) {
+      if (!reduceMotion) {
+        glint.position.z += dt * (glint.userData.speed as number);
+        if (glint.position.z > 14) glint.position.z = -2;
+        glint.material.opacity = 0.12 + (Math.sin(performance.now() * 0.0014 + (glint.userData.offset as number)) + 1) * 0.08;
+      }
+    }
   }
 
   function stepToward(hand: Hand, tx: number, tz: number, dist: number) {
