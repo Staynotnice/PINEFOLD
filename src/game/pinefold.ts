@@ -328,9 +328,10 @@ export function mountPine(
   const trackM = <T extends THREE.Material>(m: T) => { mats.add(m); return m; };
   const trackT = <T extends THREE.Texture>(texture: T) => { textures.add(texture); return texture; };
 
+  const groundTex = trackT(grassTex());
   const ground = new THREE.Mesh(
     trackG(new THREE.PlaneGeometry(100, 100)),
-    trackM(new THREE.MeshStandardMaterial({ map: trackT(grassTex()), roughness: 0.98, metalness: 0 })),
+    trackM(new THREE.MeshStandardMaterial({ map: groundTex, bumpMap: groundTex, bumpScale: 0.018, roughness: 0.98, metalness: 0 })),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
@@ -493,7 +494,8 @@ export function mountPine(
   const leafGeo = trackG(new THREE.ConeGeometry(1.25, 1.7, 11));
   const leafGeo2 = trackG(new THREE.ConeGeometry(0.92, 1.35, 11));
   const leafGeo3 = trackG(new THREE.ConeGeometry(0.55, 0.95, 9));
-  const hardGeo = trackG(new THREE.SphereGeometry(1.05, 10, 7));
+  const hardGeo = trackG(new THREE.SphereGeometry(1.05, 14, 10));
+  const branchGeo = trackG(new THREE.CylinderGeometry(0.035, 0.075, 0.8, 8));
   const logGeo = trackG(new THREE.CylinderGeometry(0.13, 0.145, 1.04, 12, 1));
   const logMaterials: THREE.Material[] = [logSideMat, logEndMat, logEndMat];
 
@@ -549,8 +551,22 @@ export function mountPine(
       a.scale.set(1.15, 0.85, 1.15);
       const b = new THREE.Mesh(hardGeo, hardMat2);
       b.position.set(0.35, 2.05, 0.1);
-      b.scale.setScalar(0.72);
-      upper.add(a, b);
+      b.scale.set(0.78, 0.75, 0.78);
+      const c = new THREE.Mesh(hardGeo, leafB);
+      c.position.set(-0.42, 2.48, 0.08);
+      c.scale.set(0.72, 0.7, 0.74);
+      const d = new THREE.Mesh(hardGeo, leafC);
+      d.position.set(0.08, 2.58, -0.38);
+      d.scale.set(0.64, 0.62, 0.66);
+      const branchL = new THREE.Mesh(branchGeo, trunkMat);
+      branchL.position.set(-0.16, 1.45, 0.02);
+      branchL.rotation.z = 0.62;
+      branchL.rotation.x = -0.12;
+      const branchR = new THREE.Mesh(branchGeo, trunkMat);
+      branchR.position.set(0.18, 1.52, 0.02);
+      branchR.rotation.z = -0.58;
+      branchR.rotation.x = 0.1;
+      upper.add(branchL, branchR, a, b, c, d);
     }
     upper.scale.setScalar(scale);
     upper.traverse((child) => {
