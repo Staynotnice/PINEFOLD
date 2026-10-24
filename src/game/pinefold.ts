@@ -710,6 +710,68 @@ export function mountPine(
   bloom.instanceMatrix.needsUpdate = true;
   scene.add(bloom);
 
+  // Wildflower clusters add a little color and scale to the forest floor without
+  // creating hundreds of individual draw calls on mobile devices.
+  const flowerStemGeo = trackG(new THREE.CylinderGeometry(0.012, 0.018, 0.22, 5));
+  const flowerPetalGeo = trackG(new THREE.SphereGeometry(0.065, 6, 5));
+  const flowerStemMat = trackM(new THREE.MeshStandardMaterial({ color: 0x47733b, roughness: 1 }));
+  const flowerMats = [
+    trackM(new THREE.MeshStandardMaterial({ color: 0xf4d9a2, roughness: 0.82 })),
+    trackM(new THREE.MeshStandardMaterial({ color: 0xe6a5a9, roughness: 0.82 })),
+    trackM(new THREE.MeshStandardMaterial({ color: 0xc5b2e8, roughness: 0.82 })),
+  ];
+  const flowerStems = new THREE.InstancedMesh(flowerStemGeo, flowerStemMat, 72);
+  const flowerHeads = flowerMats.map((mat) => new THREE.InstancedMesh(flowerPetalGeo, mat, 24));
+  const flowerStemDummy = new THREE.Object3D();
+  const flowerHeadDummies = flowerMats.map(() => new THREE.Object3D());
+  for (let i = 0; i < 72; i++) {
+    let x = 0, z = 0;
+    for (let tries = 0; tries < 8; tries++) {
+      x = (rnd() * 2 - 1) * 23;
+      z = -38 + rnd() * 52;
+      if (!(Math.abs(x) < 4.2 && z > 3 && z < 17)) break;
+    }
+    const y = 0.13;
+    flowerStemDummy.position.set(x, y, z);
+    flowerStemDummy.rotation.set((rnd() - 0.5) * 0.22, rnd() * Math.PI, (rnd() - 0.5) * 0.22);
+    flowerStemDummy.scale.setScalar(0.65 + rnd() * 0.7);
+    flowerStemDummy.updateMatrix();
+    flowerStems.setMatrixAt(i, flowerStemDummy.matrix);
+    const kind = i % flowerHeads.length;
+    const head = flowerHeadDummies[kind]!;
+    head.position.set(x, y + 0.12, z);
+    head.rotation.set(rnd() * 0.4, rnd() * Math.PI, rnd() * 0.4);
+    head.scale.setScalar(0.7 + rnd() * 0.65);
+    head.updateMatrix();
+    flowerHeads[kind]!.setMatrixAt(Math.floor(i / flowerHeads.length), head.matrix);
+  }
+  flowerStems.instanceMatrix.needsUpdate = true;
+  flowerHeads.forEach((mesh) => { mesh.instanceMatrix.needsUpdate = true; });
+  scene.add(flowerStems, ...flowerHeads);
+
+  // A few fallen timber pieces make the woods feel like a working lumber camp.
+  const fallenLog = new THREE.Group();
+  const fallenBark = trackM(new THREE.MeshStandardMaterial({ color: 0x6b4930, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.96 }));
+  const fallenCut = trackM(new THREE.MeshStandardMaterial({ color: 0xd4ad79, map: endGrainTex, bumpMap: endGrainTex, bumpScale: 0.02, roughness: 0.9 }));
+  for (let i = 0; i < 7; i++) {
+    const length = 1.4 + rnd() * 1.5;
+    const log = new THREE.Mesh(trackG(new THREE.CylinderGeometry(0.19, 0.2, length, 9)), fallenBark);
+    log.rotation.z = Math.PI / 2 + (rnd() - 0.5) * 0.12;
+    log.position.set(0, 0.2, 0);
+    log.castShadow = true;
+    log.receiveShadow = true;
+    const endA = new THREE.Mesh(trackG(new THREE.CylinderGeometry(0.18, 0.18, 0.012, 9)), fallenCut);
+    const endB = endA.clone();
+    endA.rotation.z = endB.rotation.z = Math.PI / 2;
+    endA.position.set(-length / 2, 0.2, 0);
+    endB.position.set(length / 2, 0.2, 0);
+    fallenLog.add(log, endA, endB);
+    fallenLog.position.set((rnd() > 0.5 ? 1 : -1) * (7 + rnd() * 11), 0, -20 + rnd() * 34);
+    fallenLog.rotation.y = rnd() * Math.PI;
+    scene.add(fallenLog.clone());
+    fallenLog.clear();
+  }
+
   // Forest floor details: mushroom patches and fern-like plants make the woods
   // feel discovered rather than like an empty grid. These are lightweight meshes.
   const mushroomStemMat = trackM(new THREE.MeshStandardMaterial({ color: 0xe7d9b8, roughness: 0.9 }));
