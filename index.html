@@ -39,6 +39,7 @@
           linear-gradient(145deg, #183d2a 0%, #10261c 54%, #091811 100%);
         transition: opacity .32s ease, visibility .32s ease;
       }
+      #boot-screen.boot-screen-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
       #boot-screen::before, #boot-screen::after {
         position: absolute;
         width: min(78vw, 620px);
@@ -99,6 +100,19 @@
         animation: boot-progress 1.35s ease-in-out infinite;
       }
       .boot-foot { margin-top: 13px; color: rgba(246,240,228,.38); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
+      .boot-retry {
+        display: none;
+        margin: 18px auto 0;
+        width: fit-content;
+        border: 1px solid rgba(255, 224, 138, .42);
+        border-radius: 999px;
+        padding: 10px 18px;
+        color: #ffe08a;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .boot-retry:hover { background: rgba(227,154,60,.12); }
       @keyframes boot-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(330%); } }
       @keyframes boot-rise { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
       @media (prefers-reduced-motion: reduce) {
@@ -115,8 +129,8 @@
     </script>
   </head>
   <body>
-    <div id="root">
-      <div id="boot-screen" role="status" aria-live="polite" aria-label="Loading Pinefold">
+    <div id="root"></div>
+    <div id="boot-screen" role="status" aria-live="polite" aria-label="Loading Pinefold">
         <div class="boot-card">
           <div class="boot-mark" aria-hidden="true">
             <svg width="47" height="47" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -130,14 +144,27 @@
           <p class="boot-message">Waking the forest. Getting the camp ready…</p>
           <div class="boot-meter" aria-hidden="true"><span></span></div>
           <p class="boot-foot">Chop · Haul · Build · Grow</p>
+          <a class="boot-retry" id="boot-retry" href="#" onclick="window.location.reload(); return false;">Retry loading</a>
         </div>
       </div>
-    </div>
     <noscript>
       <div style="position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:#10261c;color:#f6f0e4;font:16px system-ui;text-align:center">
         Pinefold needs JavaScript enabled to run the 3D forest and its game menus.
       </div>
     </noscript>
+    <script>
+      // Fail visibly instead of leaving an endless loading animation if the app bundle cannot start.
+      window.setTimeout(function () {
+        var root = document.getElementById("root");
+        var screen = document.getElementById("boot-screen");
+        if (screen && (!root || !root.querySelector(".game-root"))) {
+          var message = screen.querySelector(".boot-message");
+          var retry = document.getElementById("boot-retry");
+          if (message) message.textContent = "The game is taking longer than expected to start.";
+          if (retry) retry.style.display = "inline-flex";
+        }
+      }, 8000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
