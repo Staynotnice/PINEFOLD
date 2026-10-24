@@ -2,23 +2,142 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#143022" />
-    <meta name="description" content="Pinefold — build a woodland timber camp." />
-    <title>Pinefold</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#10261c" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Pinefold is a first-person 3D woodland tycoon. Chop trees, haul timber, hire a crew, upgrade your sawmill, and build a thriving forest camp." />
+    <meta name="application-name" content="Pinefold" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Pinefold — Woodland Timber Tycoon" />
+    <meta property="og:description" content="Grow a tiny forest camp into a timber business." />
+    <meta property="og:url" content="https://staynotnice.github.io/PINEFOLD/" />
+    <title>Pinefold — Woodland Timber Tycoon</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2310261c'/%3E%3Cpath d='M32 7 13 35h12L17 47h30L39 35h12L32 7Z' fill='%23e39a3c'/%3E%3Cpath d='M29 42h6v13h-6z' fill='%23f6f0e4'/%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: dark;
+        background: #10261c;
+        font-family: "Outfit", system-ui, sans-serif;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body, #root { width: 100%; height: 100%; min-height: 100%; margin: 0; }
+      body { overflow: hidden; background: #10261c; }
+      #boot-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        padding: 24px;
+        color: #f6f0e4;
+        background:
+          radial-gradient(ellipse at 50% 36%, rgba(48, 102, 64, .48), transparent 48%),
+          linear-gradient(145deg, #183d2a 0%, #10261c 54%, #091811 100%);
+        transition: opacity .32s ease, visibility .32s ease;
+      }
+      #boot-screen::before, #boot-screen::after {
+        position: absolute;
+        width: min(78vw, 620px);
+        aspect-ratio: 1;
+        border: 1px solid rgba(227, 154, 60, .13);
+        border-radius: 50%;
+        content: "";
+        pointer-events: none;
+      }
+      #boot-screen::before { transform: scale(1.18); }
+      #boot-screen::after { transform: scale(1.48); border-color: rgba(246, 240, 228, .055); }
+      .boot-card {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 390px);
+        text-align: center;
+        animation: boot-rise .6s cubic-bezier(.2,.8,.2,1) both;
+      }
+      .boot-mark {
+        display: grid;
+        place-items: center;
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 22px;
+        border: 1px solid rgba(255, 224, 138, .42);
+        border-radius: 24px;
+        background: linear-gradient(145deg, #ffc66c, #d17b23);
+        box-shadow: 0 14px 44px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255,255,255,.36);
+      }
+      .boot-title {
+        margin: 0;
+        color: #ffe08a;
+        font: italic 56px/1 "Instrument Serif", Georgia, serif;
+        letter-spacing: -.035em;
+      }
+      .boot-eyebrow {
+        margin: 14px 0 0;
+        color: #e8ad60;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .25em;
+        text-transform: uppercase;
+      }
+      .boot-message { margin: 13px 0 25px; color: rgba(246,240,228,.68); font-size: 14px; }
+      .boot-meter {
+        width: 100%;
+        height: 5px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255,255,255,.11);
+      }
+      .boot-meter span {
+        display: block;
+        width: 35%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #d17b23, #ffe08a);
+        animation: boot-progress 1.35s ease-in-out infinite;
+      }
+      .boot-foot { margin-top: 13px; color: rgba(246,240,228,.38); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
+      @keyframes boot-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(330%); } }
+      @keyframes boot-rise { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-screen, .boot-card { transition: none; animation: none; }
+        .boot-meter span { animation-duration: 3s; }
+      }
+    </style>
     <script>
-      // A raw source index.html cannot run TSX modules directly. When double-clicked,
-      // send the browser to the live build. Vite and GitHub Pages continue normally.
+      // The source index uses TSX modules, which browsers cannot execute from file://.
+      // Double-clicking index.html therefore opens the deployed playable build.
       if (window.location.protocol === "file:") {
         window.location.replace("https://staynotnice.github.io/PINEFOLD/");
       }
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot-screen" role="status" aria-live="polite" aria-label="Loading Pinefold">
+        <div class="boot-card">
+          <div class="boot-mark" aria-hidden="true">
+            <svg width="47" height="47" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M32 4 12 32h12L15 45h34L40 32h12L32 4Z" fill="#1C2A22"/>
+              <path d="M29 42h6v15h-6z" fill="#1C2A22"/>
+              <path d="M8 57h48" stroke="#1C2A22" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h1 class="boot-title">Pinefold</h1>
+          <p class="boot-eyebrow">Woodland timber tycoon</p>
+          <p class="boot-message">Waking the forest. Getting the camp ready…</p>
+          <div class="boot-meter" aria-hidden="true"><span></span></div>
+          <p class="boot-foot">Chop · Haul · Build · Grow</p>
+        </div>
+      </div>
+    </div>
+    <noscript>
+      <div style="position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:#10261c;color:#f6f0e4;font:16px system-ui;text-align:center">
+        Pinefold needs JavaScript enabled to run the 3D forest and its game menus.
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
