@@ -328,6 +328,45 @@ export function mountPine(
   const trackM = <T extends THREE.Material>(m: T) => { mats.add(m); return m; };
   const trackT = <T extends THREE.Texture>(texture: T) => { textures.add(texture); return texture; };
 
+  function skyTexture() {
+    const c = document.createElement("canvas"); c.width = 1024; c.height = 512;
+    const g = c.getContext("2d")!;
+    const sky = g.createLinearGradient(0, 0, 0, 512);
+    sky.addColorStop(0, "#62a9de");
+    sky.addColorStop(.34, "#9acde8");
+    sky.addColorStop(.62, "#d9e6dc");
+    sky.addColorStop(.82, "#e8dfb9");
+    sky.addColorStop(1, "#b2c89b");
+    g.fillStyle = sky; g.fillRect(0, 0, 1024, 512);
+    const glow = g.createRadialGradient(730, 300, 3, 730, 300, 230);
+    glow.addColorStop(0, "rgba(255,245,205,.52)");
+    glow.addColorStop(.35, "rgba(255,239,194,.2)");
+    glow.addColorStop(1, "rgba(255,239,194,0)");
+    g.fillStyle = glow; g.fillRect(440, 60, 560, 450);
+    // Soft, distant cloud wisps give the sky a natural illustrated-game finish.
+    for (let i = 0; i < 24; i++) {
+      const x = Math.random() * 1150 - 65;
+      const y = 55 + Math.random() * 165;
+      const w = 45 + Math.random() * 105;
+      const h = 10 + Math.random() * 18;
+      const cloud = g.createRadialGradient(x, y, 1, x, y, w);
+      cloud.addColorStop(0, "rgba(255,255,247,.28)");
+      cloud.addColorStop(.55, "rgba(244,250,241,.15)");
+      cloud.addColorStop(1, "rgba(244,250,241,0)");
+      g.fillStyle = cloud; g.save(); g.translate(x, y); g.scale(1, h / w); g.translate(-x, -y); g.fillRect(x - w, y - w, w * 2, w * 2); g.restore();
+    }
+    const tex = trackT(new THREE.CanvasTexture(c));
+    tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.RepeatWrapping; tex.anisotropy = 4;
+    return tex;
+  }
+
+  const skyDome = new THREE.Mesh(
+    trackG(new THREE.SphereGeometry(88, 40, 24)),
+    trackM(new THREE.MeshBasicMaterial({ map: skyTexture(), side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false })),
+  );
+  skyDome.renderOrder = -100;
+  scene.add(skyDome);
+
   const groundTex = trackT(grassTex());
   const ground = new THREE.Mesh(
     trackG(new THREE.PlaneGeometry(100, 100)),
