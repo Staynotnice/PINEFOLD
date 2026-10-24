@@ -200,10 +200,21 @@ export function Pinefold() {
               value={snap.rate > 0 ? `${snap.rate.toFixed(1)}/s` : String(snap.price)}
             />
           </div>
-          <p className="flex max-w-xl items-center gap-2 rounded-full border border-[#e39a3c]/40 bg-[#10261c]/80 px-3 py-1.5 text-sm text-[#f6f0e4] shadow-lg">
-            <TreePine className="size-4 shrink-0 text-[#e39a3c]" />
-            {snap.goal}
-          </p>
+          <div className="flex max-w-2xl flex-col gap-2">
+            <p className="flex items-center gap-2 rounded-full border border-[#e39a3c]/40 bg-[#10261c]/85 px-3 py-2 text-sm text-[#f6f0e4] shadow-lg">
+              <TreePine className="size-4 shrink-0 text-[#e39a3c]" />
+              <span className="font-semibold text-[#ffe08a]">NEXT:</span> {snap.goal}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-white/15 bg-[#10261c]/75 px-3 py-2 text-xs font-semibold text-[#f6f0e4] shadow-lg">
+              <span className="rounded-lg bg-[#e39a3c] px-2 py-1 text-[#1c1206]">1 Chop trees</span>
+              <span className="text-[#e39a3c]">›</span>
+              <span className={snap.pack > 0 ? "rounded-lg bg-[#f6f0e4] px-2 py-1 text-[#1c2a22]" : "rounded-lg bg-white/10 px-2 py-1 text-white/60"}>2 Carry logs</span>
+              <span className="text-[#e39a3c]">›</span>
+              <span className={snap.stock > 0 ? "rounded-lg bg-[#f6f0e4] px-2 py-1 text-[#1c2a22]" : "rounded-lg bg-white/10 px-2 py-1 text-white/60"}>3 Sell at yard</span>
+              <span className="text-[#e39a3c]">›</span>
+              <span className={snap.saw ? "rounded-lg bg-[#f6f0e4] px-2 py-1 text-[#1c2a22]" : "rounded-lg bg-white/10 px-2 py-1 text-white/60"}>4 Process planks</span>
+            </div>
+          </div>
           {snap.banner ? (
             <p className="font-display text-3xl text-[#ffe08a] italic drop-shadow-[0_2px_0_#1c1206]">{snap.banner}</p>
           ) : null}
@@ -340,7 +351,7 @@ export function Pinefold() {
             </p>
             <h1 className="font-display text-6xl leading-none text-[#ffe08a] italic">Pinefold</h1>
             <p className="mt-3 text-base leading-relaxed text-[#f6f0e4]/75">
-              Walk the grove, fell a tree, and dump the wood in the yard. Coins buy a sharper axe, hired hands, then the stand, the cabin, and the creek.
+              Start by chopping trees and carrying logs to the yard. Earn coins, hire workers, build a sawmill, fulfill bigger goals, and grow a tiny forest camp into a timber business.
             </p>
             {error ? <p className="mt-3 text-sm text-[#ffb4a2]">{error}</p> : null}
             <div className="mt-5 flex items-center gap-3">
