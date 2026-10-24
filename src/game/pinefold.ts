@@ -284,7 +284,7 @@ export function mountPine(
 
   let renderer: THREE.WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "low-power", stencil: false, depth: true, preserveDrawingBuffer: false });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance", stencil: false, depth: true, preserveDrawingBuffer: false });
   } catch (err) {
     hooks.onError(err instanceof Error ? err.message : "Could not start the forest.");
     throw err;
@@ -292,13 +292,13 @@ export function mountPine(
   renderer.setClearColor(0x8ec8ea, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  renderer.toneMappingExposure = 1.16;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xa6d4eb);
-  scene.fog = new THREE.FogExp2(0xd8e9cf, 0.0115);
+  scene.fog = new THREE.FogExp2(0xd8e9cf, 0.0095);
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 180);
   scene.add(camera);
 
@@ -306,7 +306,7 @@ export function mountPine(
   const sun = new THREE.DirectionalLight(0xfff0d8, 2.9);
   sun.position.set(18, 28, 12);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1536, 1536);
+  sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.radius = 4;
   sun.shadow.camera.near = 4;
   sun.shadow.camera.far = 46;
@@ -1819,9 +1819,9 @@ export function mountPine(
   function resize() {
     const w = canvas.clientWidth || 1;
     const h = canvas.clientHeight || 1;
-    const pixelCap = graphicsQuality === "high" ? (w < 900 ? 1.25 : 1.75) : graphicsQuality === "balanced" ? (w < 900 ? 1 : 1.35) : 0.85;
+    const pixelCap = graphicsQuality === "high" ? (w < 900 ? 1.6 : 2) : graphicsQuality === "balanced" ? (w < 900 ? 1.25 : 1.5) : 0.95;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelCap));
-    renderer.shadowMap.enabled = graphicsQuality === "high";
+    renderer.shadowMap.enabled = graphicsQuality !== "performance";
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -1969,7 +1969,7 @@ export function mountPine(
     },
     setGraphicsQuality(next) {
       graphicsQuality = next;
-      sun.shadow.mapSize.set(next === "high" ? 1536 : next === "balanced" ? 1024 : 512, next === "high" ? 1536 : next === "balanced" ? 1024 : 512);
+      sun.shadow.mapSize.set(next === "high" ? 2048 : next === "balanced" ? 1024 : 512, next === "high" ? 2048 : next === "balanced" ? 1024 : 512);
       sun.shadow.needsUpdate = true;
       resize();
     },
