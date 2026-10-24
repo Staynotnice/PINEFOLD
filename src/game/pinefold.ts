@@ -160,8 +160,37 @@ function grassTex() {
   const yard = toPx(0, 12);
   g.ellipse(yard[0]!, yard[1]!, 78, 70, 0, 0, Math.PI * 2);
   g.fill();
-  g.fillStyle = "#b08958";
-  g.fillRect(492, toPx(0, -30)[1]!, 40, toPx(0, 16)[1]! - toPx(0, -30)[1]!);
+  // A gently wandering dirt track with a darker, worn edge instead of a hard rectangle.
+  const pathTop = toPx(0, -30)[1]!;
+  const pathBottom = toPx(0, 16)[1]!;
+  g.fillStyle = "rgba(53,48,30,.28)";
+  g.beginPath();
+  g.moveTo(482, pathTop); g.bezierCurveTo(466, 330, 512, 375, 486, 470);
+  g.bezierCurveTo(478, 545, 492, 625, 465, pathBottom);
+  g.lineTo(554, pathBottom);
+  g.bezierCurveTo(526, 610, 543, 534, 534, 462);
+  g.bezierCurveTo(520, 375, 550, 313, 539, pathTop);
+  g.closePath(); g.fill();
+  const trackGrad = g.createLinearGradient(480, 0, 550, 0);
+  trackGrad.addColorStop(0, "#876544"); trackGrad.addColorStop(.28, "#b59568");
+  trackGrad.addColorStop(.7, "#b18b58"); trackGrad.addColorStop(1, "#79583b");
+  g.fillStyle = trackGrad;
+  g.beginPath();
+  g.moveTo(488, pathTop); g.bezierCurveTo(478, 324, 520, 377, 497, 470);
+  g.bezierCurveTo(488, 548, 505, 626, 478, pathBottom);
+  g.lineTo(540, pathBottom);
+  g.bezierCurveTo(514, 612, 531, 536, 522, 462);
+  g.bezierCurveTo(508, 376, 538, 310, 528, pathTop);
+  g.closePath(); g.fill();
+  // Small scuffs and stones break up the path so it reads as walkable terrain.
+  for (let i = 0; i < 190; i++) {
+    const y = pathTop + Math.random() * (pathBottom - pathTop);
+    const centerX = 508 + Math.sin((y - pathTop) * 0.018) * 13;
+    const x = centerX + (Math.random() - .5) * 48;
+    if (x < 480 || x > 545) continue;
+    g.fillStyle = Math.random() > .5 ? "rgba(64,45,28,.22)" : "rgba(232,199,145,.22)";
+    g.beginPath(); g.ellipse(x, y, 1 + Math.random() * 4, 1 + Math.random() * 2.5, Math.random(), 0, Math.PI * 2); g.fill();
+  }
   g.fillStyle = "#2c6a38";
   g.fillRect(0, 0, 1024, toPx(0, -32)[1]!);
   g.fillStyle = "#3a8f9a";
@@ -596,7 +625,7 @@ export function mountPine(
 
   const rockMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: stoneTex, bumpMap: stoneTex, bumpScale: 0.035, roughness: 0.96 }));
   const rockGeo = trackG(new THREE.SphereGeometry(0.35, 10, 8));
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 20; i++) {
     const rock = new THREE.Mesh(rockGeo, rockMat);
     rock.position.set((rnd() * 2 - 1) * 22, 0.08, -20 + rnd() * 28);
     rock.scale.set(1 + rnd(), 0.45, 1 + rnd() * 0.6);
@@ -1004,24 +1033,27 @@ export function mountPine(
   }
 
   const bits: Array<{ mesh: THREE.Mesh; life: number; vx: number; vy: number; vz: number }> = [];
-  const bitGeo = trackG(new THREE.BoxGeometry(0.07, 0.07, 0.07));
-  const bitMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc4a06a, roughness: 0.6 }));
-  for (let i = 0; i < 16; i++) {
+  const bitGeo = trackG(new THREE.TetrahedronGeometry(0.065, 0));
+  const bitMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc4a06a, roughness: 0.72, flatShading: true }));
+  for (let i = 0; i < 26; i++) {
     const mesh = new THREE.Mesh(bitGeo, bitMat);
     mesh.visible = false;
     scene.add(mesh);
     bits.push({ mesh, life: 0, vx: 0, vy: 0, vz: 0 });
   }
   function puff(x: number, z: number) {
-    for (let n = 0; n < 4; n++) {
+    for (let n = 0; n < 7; n++) {
       const bit = bits.find((b) => b.life <= 0);
       if (!bit) return;
       bit.life = 0.45;
       bit.mesh.visible = true;
-      bit.mesh.position.set(x + (Math.random() - 0.5) * 0.4, 1.5, z + (Math.random() - 0.5) * 0.3);
-      bit.vx = (Math.random() - 0.5) * 2.6;
-      bit.vy = 1.6 + Math.random() * 1.2;
-      bit.vz = (Math.random() - 0.5) * 2.6;
+      bit.mesh.position.set(x + (Math.random() - 0.5) * 0.5, 1.45 + Math.random() * 0.25, z + (Math.random() - 0.5) * 0.38);
+      bit.mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      const chipScale = 0.65 + Math.random() * 1.2;
+      bit.mesh.scale.set(chipScale, chipScale * (0.7 + Math.random() * 0.8), chipScale);
+      bit.vx = (Math.random() - 0.5) * 3.2;
+      bit.vy = 1.8 + Math.random() * 1.6;
+      bit.vz = (Math.random() - 0.5) * 3.2;
     }
   }
 
