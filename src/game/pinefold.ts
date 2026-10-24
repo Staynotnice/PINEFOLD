@@ -236,7 +236,7 @@ type Hand = {
   legR: THREE.Object3D;
   arm: THREE.Object3D;
   carryMesh: THREE.Object3D;
-  state: "seek" | "chop" | "haul";
+  state: "seek" | "chop" | "haul" | "mill";
   tree: Tree | null;
   carry: number;
   chopT: number;
@@ -942,6 +942,24 @@ export function mountPine(
   sawRoot.add(sawTop, sawLeg, sawLeg2, blade);
   sawRoot.visible = false;
 
+  // Finished boards are stacked beside the sawbench once the sawmill is unlocked.
+  const boardStack = new THREE.Group();
+  boardStack.position.set(7.75, 0, 11.2);
+  scene.add(boardStack);
+  const boardMeshes: THREE.Mesh[] = [];
+  const boardMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: plankTex, roughness: 0.86 }));
+  const boardGeo = trackG(new THREE.BoxGeometry(0.92, 0.09, 0.18));
+  for (let i = 0; i < 24; i++) {
+    const boardMesh = new THREE.Mesh(boardGeo, boardMat);
+    boardMesh.position.set((i % 4) * 0.02, 0.08 + Math.floor(i / 4) * 0.11, (i % 4) * 0.19 - 0.28);
+    boardMesh.rotation.y = i % 2 ? 0.025 : -0.025;
+    boardMesh.castShadow = true;
+    boardMesh.receiveShadow = true;
+    boardMesh.visible = false;
+    boardStack.add(boardMesh);
+    boardMeshes.push(boardMesh);
+  }
+
   const creek = new THREE.Mesh(trackG(new THREE.PlaneGeometry(4.2, 16)), waterMat);
   creek.rotation.x = -Math.PI / 2;
   creek.position.set(22, 0.05, 6);
@@ -1350,6 +1368,9 @@ export function mountPine(
 
   function refreshProps() {
     sawRoot.visible = saw;
+    boardStack.visible = saw;
+    const visibleBoards = saw ? Math.min(boardMeshes.length, Math.ceil(stock * 0.75)) : 0;
+    boardMeshes.forEach((m, i) => { m.visible = i < visibleBoards; });
     const bladeScale = 0.92 + Math.max(0, axe - 1) * 0.06;
     hero.axeHead.scale.set(bladeScale, bladeScale, 1);
     hero.axeEdge.scale.set(bladeScale, bladeScale, 1);
@@ -1455,9 +1476,10 @@ export function mountPine(
     for (const hand of crew) {
       hand.phase += dt * 8;
       if (hand.carry > 0) {
-        hand.state = "haul";
-        const tx = 0;
-        const tz = 11.5;
+        // With the sawbench built, crew haul timber to the mill instead of the raw-log yard.
+        const tx = saw ? 6.4 : 0;
+        const tz = saw ? 11.2 : 11.5;
+        hand.state = saw ? "mill" : "haul";
         stepToward(hand, tx, tz, 4.3 * dt);
         if (Math.hypot(hand.x - tx, hand.z - tz) < 1.3) {
           const room = stockCap() - stock;
@@ -1467,6 +1489,7 @@ export function mountPine(
             dumped += take;
             hand.carry -= take;
             audio.pickup();
+            if (saw) say("Fresh boards stacked!");
           }
         }
       } else if (hand.tree && treeOpen(hand.tree)) {
@@ -1496,6 +1519,10 @@ export function mountPine(
       hand.carryMesh.visible = hand.carry > 0;
       const moving = Math.hypot(hand.vx, hand.vz) > 0.2;
       const swing = moving ? Math.sin(hand.phase) * 0.72 : Math.sin(hand.phase * 0.4) * 0.025;
+      if (hand.state === "mill" && hand.carry > 0) {
+        // A short, readable sawing motion while the worker unloads at the bench.
+        hand.arm.rotation.x = Math.sin(hand.phase * 2.8) * 0.48 - 0.25;
+      }
       hand.legL.rotation.x = swing;
       hand.legR.rotation.x = -swing;
       if (hand.state !== "chop") {
