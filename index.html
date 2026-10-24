@@ -9,6 +9,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      // A raw source index.html cannot run TSX modules directly. When double-clicked,
+      // send the browser to the live build. Vite and GitHub Pages continue normally.
+      if (window.location.protocol === "file:") {
+        window.location.replace("https://staynotnice.github.io/PINEFOLD/");
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
