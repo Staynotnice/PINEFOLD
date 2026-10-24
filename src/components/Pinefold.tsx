@@ -161,6 +161,19 @@ export function Pinefold() {
     touchRef.current.moveY = -dy / max;
   }
 
+  useEffect(() => {
+    if (!upgradeOpen && !sheet && !settingsOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setUpgradeOpen(false);
+        setSheet(false);
+        setSettingsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [upgradeOpen, sheet, settingsOpen]);
+
   const playing = phase === "playing";
 
   const rows: Array<{ id: UpgradeId; title: string; detail: string; cost: number | null }> = [
