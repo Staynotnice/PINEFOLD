@@ -6,7 +6,7 @@ import type { PineApi, Snap, UpgradeId } from "@/game/pinefold";
 type GraphicsQuality = "performance" | "balanced" | "high";
 type LocalOptions = { quality: GraphicsQuality; cameraDistance: number; reducedMotion: boolean; showTips: boolean };
 function loadOptions(): LocalOptions {
-  const fallback: LocalOptions = { quality: window.matchMedia("(pointer: coarse), (max-width: 959px)").matches ? "performance" : "high", cameraDistance: 8.4, reducedMotion: false, showTips: true };
+  const fallback: LocalOptions = { quality: window.matchMedia("(pointer: coarse), (max-width: 959px)").matches ? "balanced" : "high", cameraDistance: 8.4, reducedMotion: false, showTips: true };
   try {
     const raw = localStorage.getItem("pinefold-options");
     if (!raw) return fallback;
