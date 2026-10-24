@@ -111,6 +111,12 @@ export function Pinefold() {
         },
       });
       apiRef.current = api;
+    }).catch((reason: unknown) => {
+      if (dead) return;
+      const message = reason instanceof Error ? reason.message : "The forest engine could not be loaded.";
+      console.error("Pinefold game startup failed:", reason);
+      setError(message);
+      setReady(false);
     });
     return () => {
       dead = true;
