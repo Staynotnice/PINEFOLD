@@ -1,8 +1,23 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Axe, Backpack, Coins, HandCoins, Package, Pause, TreePine, Volume2, VolumeX } from "lucide-react";
+import { Axe, Backpack, CheckCircle2, Coins, Gauge, HandCoins, Hammer, HardHat, LockKeyhole, Monitor, Package, Pause, Settings, Sparkles, TreePine, Trees, Volume2, VolumeX, Waves, Warehouse, X } from "lucide-react";
 import type { Phase, TouchInput } from "@/game/types";
 import type { PineApi, Snap, UpgradeId } from "@/game/pinefold";
 
+type GraphicsQuality = "performance" | "balanced" | "high";
+type LocalOptions = { quality: GraphicsQuality; cameraDistance: number; reducedMotion: boolean; showTips: boolean };
+function loadOptions(): LocalOptions {
+  const fallback: LocalOptions = { quality: "high", cameraDistance: 8.4, reducedMotion: false, showTips: true };
+  try {
+    const raw = localStorage.getItem("pinefold-options");
+    if (!raw) return fallback;
+    const saved = JSON.parse(raw) as Partial<LocalOptions>;
+    return {
+      quality: saved.quality === "performance" || saved.quality === "balanced" ? saved.quality : "high",
+      cameraDistance: typeof saved.cameraDistance === "number" ? Math.max(6, Math.min(12, saved.cameraDistance)) : fallback.cameraDistance,
+      reducedMotion: Boolean(saved.reducedMotion), showTips: saved.showTips !== false,
+    };
+  } catch { return fallback; }
+}
 const emptySnap = (): Snap => ({
   coins: 0,
   pack: 0,
@@ -52,6 +67,9 @@ export function Pinefold() {
   const [error, setError] = useState<string | null>(null);
   const [narrow, setNarrow] = useState(true);
   const [sheet, setSheet] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [options, setOptions] = useState<LocalOptions>(loadOptions);
   const [snap, setSnap] = useState<Snap>(emptySnap);
 
   useEffect(() => {
@@ -61,6 +79,18 @@ export function Pinefold() {
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem("pinefold-options", JSON.stringify(options)); } catch { /* settings remain usable without storage */ }
+    if (!ready || !apiRef.current) return;
+    apiRef.current.setGraphicsQuality(options.quality);
+    apiRef.current.setCameraDistance(options.cameraDistance);
+    apiRef.current.setReducedMotion(options.reducedMotion);
+  }, [options, ready]);
+
+  function updateOptions(patch: Partial<LocalOptions>) {
+    setOptions((current) => ({ ...current, ...patch }));
+  }
 
   useEffect(() => {
     let dead = false;
@@ -179,8 +209,8 @@ export function Pinefold() {
 
       {playing ? (
         <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-2 px-3 pr-16 pt-[max(0.6rem,env(safe-area-inset-top))]">
-          <div className="flex flex-wrap items-stretch gap-2">
-            <Chip mark={<Coins className="size-5" />} label="Coins" hint="Spend these in Camp" value={String(snap.coins)} />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+            <Chip mark={<Coins className="size-5" />} label="Coins" hint="Spend these on camp upgrades" value={String(snap.coins)} />
             <Chip
               mark={<Backpack className="size-5" />}
               label="Carrying"
@@ -200,12 +230,12 @@ export function Pinefold() {
               value={snap.rate > 0 ? `${snap.rate.toFixed(1)}/s` : String(snap.price)}
             />
           </div>
-          <div className="flex max-w-2xl flex-col gap-2">
-            <p className="flex items-center gap-2 rounded-full border border-[#e39a3c]/40 bg-[#10261c]/85 px-3 py-2 text-sm text-[#f6f0e4] shadow-lg">
+          <div className="mt-1 flex max-w-2xl flex-col gap-3">
+            {options.showTips ? <p className="hud-objective flex items-center gap-2 rounded-2xl border border-[#e39a3c]/45 bg-[#10261c]/90 px-4 py-3 text-sm text-[#f6f0e4] shadow-xl">
               <TreePine className="size-4 shrink-0 text-[#e39a3c]" />
               <span className="font-semibold text-[#ffe08a]">NEXT:</span> {snap.goal}
-            </p>
-            <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-white/15 bg-[#10261c]/75 px-3 py-2 text-xs font-semibold text-[#f6f0e4] shadow-lg">
+            </p> : null}
+            {options.showTips ? <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-white/15 bg-[#10261c]/78 px-3 py-2 text-xs font-semibold text-[#f6f0e4] shadow-lg">
               <span className="rounded-lg bg-[#e39a3c] px-2 py-1 text-[#1c1206]">1 Chop trees</span>
               <span className="text-[#e39a3c]">›</span>
               <span className={snap.pack > 0 ? "rounded-lg bg-[#f6f0e4] px-2 py-1 text-[#1c2a22]" : "rounded-lg bg-white/10 px-2 py-1 text-white/60"}>2 Carry logs</span>
@@ -214,7 +244,7 @@ export function Pinefold() {
               <span className="text-[#e39a3c]">›</span>
               <span className={snap.saw ? "rounded-lg bg-[#f6f0e4] px-2 py-1 text-[#1c2a22]" : "rounded-lg bg-white/10 px-2 py-1 text-white/60"}>4 Process planks</span>
             </div>
-            <div className="w-fit min-w-64 rounded-2xl border border-[#e39a3c]/35 bg-[#10261c]/85 px-3 py-2 text-[#f6f0e4] shadow-lg">
+            <div className="w-full max-w-md rounded-2xl border border-[#e39a3c]/35 bg-[#10261c]/88 px-4 py-3 text-[#f6f0e4] shadow-xl">
               <div className="mb-1 flex items-center justify-between gap-4 text-xs">
                 <span className="font-bold tracking-wider text-[#ffe08a] uppercase">Mill Operations</span>
                 <span className="text-white/65">{snap.hands} / 4 crew</span>
@@ -227,7 +257,7 @@ export function Pinefold() {
                 <span>{snap.north ? "Hardwood unlocked" : "North forest locked"}</span>
                 <span>{snap.wheel ? "Creek buyer online" : "One yard buyer"}</span>
               </div>
-            </div>
+            </div> : null}
           </div>
           {snap.banner ? (
             <p className="font-display text-3xl text-[#ffe08a] italic drop-shadow-[0_2px_0_#1c1206]">{snap.banner}</p>
@@ -275,10 +305,10 @@ export function Pinefold() {
             <button
               type="button"
               data-control
-              className="min-h-14 rounded-full border border-[#e39a3c]/70 bg-[#10261c]/85 px-5 text-sm font-semibold tracking-wide text-[#f6e7c1] shadow-lg"
-              onClick={() => setSheet((v) => !v)}
+              className="flex min-h-14 items-center gap-2 rounded-full border border-[#e39a3c]/70 bg-[#10261c]/90 px-5 text-sm font-semibold tracking-wide text-[#f6e7c1] shadow-xl backdrop-blur-md"
+              onClick={() => { setSheet(false); setUpgradeOpen(true); }}
             >
-              Camp
+              <Sparkles className="size-4 text-[#ffe08a]" /> Upgrades
             </button>
             <button
               type="button"
@@ -305,15 +335,11 @@ export function Pinefold() {
       ) : null}
 
       {playing ? (
-        <button
-          type="button"
-          data-control
-          className="absolute top-[max(0.6rem,env(safe-area-inset-top))] right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-[#10261c]/80 text-[#f6f0e4]"
-          aria-label="Pause"
-          onClick={() => apiRef.current?.pause()}
-        >
-          <Pause className="size-4" />
-        </button>
+        <div className="absolute top-[max(0.75rem,env(safe-area-inset-top))] right-3 z-10 flex items-center gap-2">
+          <button type="button" data-control className="hud-action hidden sm:flex" onClick={() => { setSheet(false); setUpgradeOpen(true); }}><Sparkles className="size-4 text-[#ffe08a]" /> <span>Upgrades</span></button>
+          <button type="button" data-control className="hud-icon-button" aria-label="Settings" title="Settings" onClick={() => setSettingsOpen(true)}><Settings className="size-5" /></button>
+          <button type="button" data-control className="hud-icon-button" aria-label="Pause" title="Pause" onClick={() => apiRef.current?.pause()}><Pause className="size-5" /></button>
+        </div>
       ) : null}
 
       {sheet && playing ? (
@@ -455,8 +481,8 @@ function Chip({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#10261c]/80 py-1 pr-3 pl-1 text-[#f6f0e4] shadow-lg" title={hint}>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e39a3c] text-[#1c1206]" aria-hidden>
+    <div className="hud-chip flex min-w-0 items-center gap-2 rounded-2xl border border-white/15 bg-[#10261c]/88 py-2 pr-4 pl-2 text-[#f6f0e4] shadow-xl backdrop-blur-md transition duration-200 hover:-translate-y-0.5 hover:border-[#e39a3c]/45" title={hint}>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#ffc66c] to-[#d17b23] text-[#1c1206] shadow-inner" aria-hidden>
         {mark}
       </span>
       <div>
