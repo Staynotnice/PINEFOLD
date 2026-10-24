@@ -342,43 +342,46 @@ export function Pinefold() {
         </div>
       ) : null}
 
-      {sheet && playing ? (
-        <div className="absolute inset-x-0 bottom-0 z-20 rounded-t-3xl border-t border-[#e39a3c]/40 bg-[#10261c]/95 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-[#f6f0e4] shadow-2xl">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-3xl text-[#ffe08a] italic">Camp</h2>
-            <button type="button" className="min-h-11 px-3 text-sm text-[#f6f0e4]/70" onClick={() => setSheet(false)}>
-              Close
-            </button>
-          </div>
-          <ul className="grid max-h-[46dvh] gap-2 overflow-y-auto">
-            {rows.map((row) => {
-              const lock = snap.lock[row.id];
-              const done = row.cost == null;
-              return (
-                <li key={row.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-                  <div>
-                    <p className="font-semibold">{row.title}</p>
-                    <p className="text-sm text-[#f6f0e4]/65">{lock ?? row.detail}</p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={done}
-                    className="min-h-11 min-w-20 rounded-full bg-[#e39a3c] px-3 text-sm font-semibold text-[#1c1206] disabled:bg-white/10 disabled:text-[#f6f0e4]/40"
-                    onClick={() => apiRef.current?.buy(row.id)}
-                  >
-                    {done ? (
-                      "Owned"
-                    ) : (
-                      <span className="inline-flex items-center justify-center gap-1">
-                        <Coins className="size-4" />
-                        {row.cost}
-                      </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+      {(sheet || upgradeOpen) && playing && !settingsOpen ? (
+        <div className="modal-scrim absolute inset-0 z-30 flex items-center justify-center p-3 sm:p-6" onPointerDown={(e) => { if (e.target === e.currentTarget) { setSheet(false); setUpgradeOpen(false); } }}>
+          <section className="upgrade-panel w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-[#e39a3c]/40 bg-[#10261c]/96 text-[#f6f0e4] shadow-2xl backdrop-blur-xl">
+            <header className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-7 sm:py-5">
+              <div className="flex items-center gap-3"><span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e39a3c] text-[#1c1206]"><Sparkles className="size-6" /></span><div><p className="text-[10px] font-bold tracking-[0.22em] text-[#e8ad60] uppercase">Camp development</p><h2 className="font-display text-3xl leading-none text-[#ffe08a] sm:text-4xl">Upgrade yard</h2><p className="mt-1 text-sm text-white/60">Invest in your crew, equipment, and timber business.</p></div></div>
+              <div className="flex items-center gap-3"><div className="hidden rounded-xl border border-[#e39a3c]/35 bg-[#e39a3c]/10 px-4 py-2 sm:block"><p className="text-[10px] font-bold tracking-widest text-white/55 uppercase">Available funds</p><p className="flex items-center gap-2 font-display text-2xl text-[#ffe08a]"><Coins className="size-5" />{snap.coins}</p></div><button type="button" className="hud-icon-button" aria-label="Close upgrades" onClick={() => { setSheet(false); setUpgradeOpen(false); }}><X className="size-5" /></button></div>
+            </header>
+            <div className="max-h-[min(68dvh,650px)] overflow-y-auto px-4 py-4 sm:px-7 sm:py-6">
+              <div className="mb-4 grid grid-cols-2 gap-2 sm:hidden"><div className="rounded-xl border border-white/10 bg-white/5 p-3"><p className="text-[10px] uppercase tracking-widest text-white/55">Coins</p><p className="font-display text-2xl text-[#ffe08a]">{snap.coins}</p></div><div className="rounded-xl border border-white/10 bg-white/5 p-3"><p className="text-[10px] uppercase tracking-widest text-white/55">Crew</p><p className="font-display text-2xl text-[#ffe08a]">{snap.hands}/4</p></div></div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {rows.map((row) => {
+                  const lock = snap.lock[row.id]; const done = row.cost == null;
+                  const mark = row.id === "axe" ? <Axe className="size-6" /> : row.id === "pack" ? <Backpack className="size-6" /> : row.id === "hand" ? <HardHat className="size-6" /> : row.id === "saw" ? <Hammer className="size-6" /> : row.id === "north" ? <Trees className="size-6" /> : row.id === "cabin" ? <Warehouse className="size-6" /> : <Waves className="size-6" />;
+                  const status = done ? "Installed" : lock ? "Locked" : snap.coins >= (row.cost ?? 0) ? "Ready to buy" : "Keep earning";
+                  return <article key={row.id} className={`upgrade-card flex min-h-44 flex-col rounded-2xl border p-4 transition duration-200 ${done ? "border-[#81b88a]/35 bg-[#2f6b45]/15" : "border-white/10 bg-white/[0.045] hover:border-[#e39a3c]/45 hover:bg-white/[0.075]"}`}>
+                    <div className="flex items-start justify-between gap-3"><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${done ? "bg-[#2f6b45] text-white" : "bg-[#e39a3c]/15 text-[#ffe08a]"}`}>{done ? <CheckCircle2 className="size-6" /> : mark}</span><span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-bold tracking-widest text-white/55 uppercase">{status}</span></div>
+                    <h3 className="mt-3 font-display text-2xl leading-none text-[#f6f0e4]">{row.title}</h3><p className="mt-2 min-h-10 text-sm leading-relaxed text-white/60">{lock ?? row.detail}</p>
+                    <div className="mt-auto flex items-center justify-between gap-3 pt-4">{done ? <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9ecfa4]"><CheckCircle2 className="size-4" /> Owned</span> : <span className="inline-flex items-center gap-1.5 font-semibold text-[#ffe08a]"><Coins className="size-4" />{row.cost}</span>}<button type="button" disabled={done} className="upgrade-buy-button" onClick={() => apiRef.current?.buy(row.id)}>{done ? "Installed" : lock ? <><LockKeyhole className="size-4" /> Locked</> : <><Sparkles className="size-4" /> Upgrade</>}</button></div>
+                  </article>;
+                })}
+              </div>
+            </div>
+            <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-5 py-4 sm:px-7"><p className="flex items-center gap-2 text-xs text-white/55"><Gauge className="size-4 text-[#e8ad60]" /> Production scales with your camp investments.</p><button type="button" className="min-h-11 rounded-full border border-white/15 px-5 text-sm font-semibold text-white/80 hover:bg-white/10" onClick={() => { setSheet(false); setUpgradeOpen(false); }}>Back to forest</button></footer>
+          </section>
+        </div>
+      ) : null}
+
+      {settingsOpen ? (
+        <div className="modal-scrim absolute inset-0 z-40 flex items-center justify-center p-3 sm:p-6" onPointerDown={(e) => { if (e.target === e.currentTarget) setSettingsOpen(false); }}>
+          <section className="settings-panel w-full max-w-xl overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#10261c]/97 text-[#f6f0e4] shadow-2xl backdrop-blur-xl">
+            <header className="flex items-center justify-between border-b border-white/10 px-5 py-5 sm:px-7"><div className="flex items-center gap-3"><span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e39a3c] text-[#1c1206]"><Settings className="size-6" /></span><div><p className="text-[10px] font-bold tracking-[0.22em] text-[#e8ad60] uppercase">Customize your session</p><h2 className="font-display text-3xl text-[#ffe08a]">Settings</h2></div></div><button type="button" className="hud-icon-button" aria-label="Close settings" onClick={() => setSettingsOpen(false)}><X className="size-5" /></button></header>
+            <div className="grid gap-5 px-5 py-5 sm:px-7">
+              <div className="settings-row"><div className="flex items-center gap-3"><span className="settings-icon"><Monitor className="size-5" /></span><div><p className="font-semibold">Graphics quality</p><p className="text-sm text-white/55">Balance detail and frame rate.</p></div></div><div className="grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-black/20 p-1">{(["performance", "balanced", "high"] as GraphicsQuality[]).map((value) => <button key={value} type="button" className={`quality-option ${options.quality === value ? "is-selected" : ""}`} onClick={() => updateOptions({ quality: value })}>{value === "performance" ? "Fast" : value === "balanced" ? "Balanced" : "High"}</button>)}</div></div>
+              <div className="settings-row"><div className="flex items-center gap-3"><span className="settings-icon"><Gauge className="size-5" /></span><div><p className="font-semibold">Camera distance</p><p className="text-sm text-white/55">Widen or tighten your view.</p></div></div><div className="flex items-center gap-3"><input aria-label="Camera distance" className="settings-range" type="range" min="6" max="12" step="0.5" value={options.cameraDistance} onChange={(e) => updateOptions({ cameraDistance: Number(e.target.value) })} /><span className="w-10 text-right text-sm tabular-nums text-[#ffe08a]">{options.cameraDistance.toFixed(1)}</span></div></div>
+              <div className="settings-row"><div className="flex items-center gap-3"><span className="settings-icon"><Waves className="size-5" /></span><div><p className="font-semibold">Reduced motion</p><p className="text-sm text-white/55">Tone down ambient movement.</p></div></div><button type="button" role="switch" aria-checked={options.reducedMotion} className={`settings-switch ${options.reducedMotion ? "is-on" : ""}`} onClick={() => updateOptions({ reducedMotion: !options.reducedMotion })}><span /></button></div>
+              <div className="settings-row"><div className="flex items-center gap-3"><span className="settings-icon"><TreePine className="size-5" /></span><div><p className="font-semibold">Gameplay hints</p><p className="text-sm text-white/55">Show goals and production steps.</p></div></div><button type="button" role="switch" aria-checked={options.showTips} className={`settings-switch ${options.showTips ? "is-on" : ""}`} onClick={() => updateOptions({ showTips: !options.showTips })}><span /></button></div>
+              <div className="settings-row"><div className="flex items-center gap-3"><span className="settings-icon">{muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}</span><div><p className="font-semibold">Game audio</p><p className="text-sm text-white/55">Sound effects and woodland ambience.</p></div></div><button type="button" className="quality-option is-selected min-w-24" onClick={() => { const next = !muted; setMuted(next); apiRef.current?.setMuted(next); }}>{muted ? "Sound off" : "Sound on"}</button></div>
+            </div>
+            <footer className="flex items-center justify-between border-t border-white/10 px-5 py-4 sm:px-7"><p className="text-xs text-white/40">Settings save automatically on this device.</p><button type="button" className="min-h-11 rounded-full bg-[#e39a3c] px-5 text-sm font-semibold text-[#1c1206]" onClick={() => setSettingsOpen(false)}>Done</button></footer>
+          </section>
         </div>
       ) : null}
 
