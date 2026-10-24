@@ -523,6 +523,8 @@ export function mountPine(
   const pantMat = trackM(new THREE.MeshStandardMaterial({ color: 0x243044, map: fabricTex, roughness: 0.88 }));
   const hatMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc4552a, map: fabricTex, roughness: 0.86 }));
   const steelMat = trackM(new THREE.MeshStandardMaterial({ color: 0xd7e0e2, roughness: 0.24, metalness: 0.86 }));
+  const axePolishedMat = trackM(new THREE.MeshStandardMaterial({ color: 0x9fc9d3, roughness: 0.2, metalness: 0.96 }));
+  const axeLegendMat = trackM(new THREE.MeshStandardMaterial({ color: 0xd7a74a, roughness: 0.24, metalness: 0.88 }));
   const axeEdgeMat = trackM(new THREE.MeshStandardMaterial({ color: 0xf2f5ed, roughness: 0.18, metalness: 0.92 }));
   const gripMat = trackM(new THREE.MeshStandardMaterial({ color: 0x57351f, roughness: 0.88 }));
   const bootMat = trackM(new THREE.MeshStandardMaterial({ color: 0x493021, roughness: 0.9 }));
@@ -965,7 +967,7 @@ export function mountPine(
     blob.rotation.x = -Math.PI / 2;
     blob.position.y = 0.03;
     group.add(blob);
-    return { group, legL, legR, arm, carryMesh };
+    return { group, legL, legR, arm, carryMesh, axeHead, axeEdge };
   }
 
   const shirtHands = [0xc4552a, 0x2f6b45, 0x7a4a8a, 0xb08930].map(
@@ -1265,6 +1267,10 @@ export function mountPine(
 
   function refreshProps() {
     sawRoot.visible = saw;
+    const bladeScale = 0.92 + Math.max(0, axe - 1) * 0.06;
+    hero.axeHead.scale.set(bladeScale, bladeScale, 1);
+    hero.axeEdge.scale.set(bladeScale, bladeScale, 1);
+    hero.axeHead.material = axe >= 5 ? axeLegendMat : axe >= 3 ? axePolishedMat : steelMat;
     creekWheel.visible = wheel;
     const cap = stockCap();
     const shown = Math.min(stackLogs.length, Math.ceil((stock / Math.max(1, cap)) * stackLogs.length));
