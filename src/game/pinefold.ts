@@ -279,6 +279,8 @@ export function mountPine(
   let reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let graphicsQuality: GraphicsQuality = "high";
   let cameraDistance = 8.4;
+  let cameraYaw = 0;
+  let cameraPitch = 0;
 
   let renderer: THREE.WebGLRenderer;
   try {
@@ -1772,12 +1774,21 @@ export function mountPine(
       camera.position.set(Math.sin(ang) * 16, 18, 12 + Math.cos(ang) * 10);
       camTarget.set(0, 0.5, 4);
     } else {
-      const height = cameraDistance * 1.33;
-      const back = cameraDistance;
-      const want = new THREE.Vector3(player.x, height, player.z + back);
+      // Pointer/touch drag deltas are consumed once per frame for a smooth orbit camera.
+      cameraYaw -= touch.lookX * 0.006;
+      cameraPitch = clamp(cameraPitch + touch.lookY * 0.005, -0.2, 0.65);
+      touch.lookX = 0;
+      touch.lookY = 0;
+      const horizontal = cameraDistance * Math.cos(cameraPitch);
+      const height = cameraDistance * (1.1 + Math.sin(cameraPitch));
+      const want = new THREE.Vector3(
+        player.x + Math.sin(cameraYaw) * horizontal,
+        height,
+        player.z + Math.cos(cameraYaw) * horizontal,
+      );
       if (camera.position.y < 2) camera.position.copy(want);
-      camera.position.lerp(want, 1 - Math.exp(-4 * dt));
-      camTarget.set(player.x, 0.6, player.z - 1.2);
+      camera.position.lerp(want, 1 - Math.exp(-7 * dt));
+      camTarget.set(player.x, 0.8, player.z - 0.4);
     }
     camera.lookAt(camTarget);
     const focus = phase === "menu" ? 4 : player.z;
