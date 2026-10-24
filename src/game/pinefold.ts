@@ -524,6 +524,8 @@ export function mountPine(
   const steelMat = trackM(new THREE.MeshStandardMaterial({ color: 0xd7e0e2, roughness: 0.24, metalness: 0.86 }));
   const axeEdgeMat = trackM(new THREE.MeshStandardMaterial({ color: 0xf2f5ed, roughness: 0.18, metalness: 0.92 }));
   const gripMat = trackM(new THREE.MeshStandardMaterial({ color: 0x57351f, roughness: 0.88 }));
+  const bootMat = trackM(new THREE.MeshStandardMaterial({ color: 0x493021, roughness: 0.9 }));
+  const brassMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc28b3a, roughness: 0.34, metalness: 0.62 }));
   const waterMat = trackM(
     new THREE.MeshStandardMaterial({ color: 0x3a9aaa, roughness: 0.22, metalness: 0.08, transparent: true, opacity: 0.92 }),
   );
@@ -888,6 +890,13 @@ export function mountPine(
     torso.position.y = 0.27;
     torso.castShadow = true;
     hip.add(torso);
+    const belt = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.37, 0.065, 0.265)), gripMat);
+    belt.position.set(0, 0.095, 0);
+    const buckle = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.065, 0.052, 0.018)), brassMat);
+    buckle.position.set(0, 0.095, 0.142);
+    const pouch = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.095, 0.12, 0.06)), woodMat);
+    pouch.position.set(-0.145, 0.07, -0.005);
+    hip.add(belt, buckle, pouch);
     const head = new THREE.Mesh(trackG(new THREE.SphereGeometry(0.16, 12, 9)), skinMat);
     head.position.y = 0.66;
     head.castShadow = true;
@@ -898,7 +907,7 @@ export function mountPine(
     const eyeR = eyeL.clone();
     eyeR.position.x = -0.055;
     hip.add(eyeL, eyeR);
-    const brim = new THREE.Mesh(trackG(new THREE.CylinderGeometry(0.32, 0.32, 0.045, 10)), hatMat);
+    const brim = new THREE.Mesh(trackG(new THREE.CylinderGeometry(0.32, 0.32, 0.045, 14)), hatMat);
     brim.position.y = 0.76;
     brim.castShadow = true;
     const crown = new THREE.Mesh(trackG(new THREE.ConeGeometry(0.18, 0.26, 8)), new THREE.MeshStandardMaterial({ color: hat, roughness: 0.7 }));
@@ -931,9 +940,13 @@ export function mountPine(
     function leg(side: number) {
       const pivot = new THREE.Group();
       pivot.position.set(side * 0.1, -0.02, 0);
-      const mesh = new THREE.Mesh(trackG(new THREE.CapsuleGeometry(0.065, 0.24, 2, 7)), pantMat);
-      mesh.position.y = -0.18;
-      pivot.add(mesh);
+      const mesh = new THREE.Mesh(trackG(new THREE.CapsuleGeometry(0.065, 0.68, 3, 8)), pantMat);
+      mesh.position.y = -0.37;
+      mesh.castShadow = true;
+      const boot = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.145, 0.09, 0.22)), bootMat);
+      boot.position.set(0, -0.735, 0.055);
+      boot.castShadow = true;
+      pivot.add(mesh, boot);
       hip.add(pivot);
       return pivot;
     }
