@@ -235,7 +235,7 @@ export function Pinefold() {
               <TreePine className="size-4 shrink-0 text-[#e39a3c]" />
               <span className="font-semibold text-[#ffe08a]">NEXT:</span> {snap.goal}
             </p> : null}
-            {options.showTips ? <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-white/15 bg-[#10261c]/78 px-3 py-2 text-xs font-semibold text-[#f6f0e4] shadow-lg">
+            {options.showTips ? <div className="tips-stack flex flex-col gap-2"><div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-white/15 bg-[#10261c]/78 px-3 py-2 text-xs font-semibold text-[#f6f0e4] shadow-lg">
               <span className="rounded-lg bg-[#e39a3c] px-2 py-1 text-[#1c1206]">1 Chop trees</span>
               <span className="text-[#e39a3c]">›</span>
               <span className={snap.pack > 0 ? "rounded-lg bg-[#f6f0e4] px-2 py-1 text-[#1c2a22]" : "rounded-lg bg-white/10 px-2 py-1 text-white/60"}>2 Carry logs</span>
@@ -257,7 +257,7 @@ export function Pinefold() {
                 <span>{snap.north ? "Hardwood unlocked" : "North forest locked"}</span>
                 <span>{snap.wheel ? "Creek buyer online" : "One yard buyer"}</span>
               </div>
-            </div> : null}
+            </div></div> : null}
           </div>
           {snap.banner ? (
             <p className="font-display text-3xl text-[#ffe08a] italic drop-shadow-[0_2px_0_#1c1206]">{snap.banner}</p>
