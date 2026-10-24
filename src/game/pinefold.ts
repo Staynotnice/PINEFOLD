@@ -1224,7 +1224,7 @@ export function mountPine(
       if (!reduceMotion) {
         glint.position.z += dt * (glint.userData.speed as number);
         if (glint.position.z > 14) glint.position.z = -2;
-        glint.material.opacity = 0.12 + (Math.sin(performance.now() * 0.0014 + (glint.userData.offset as number)) + 1) * 0.08;
+        glintMat.opacity = 0.12 + (Math.sin(performance.now() * 0.0014 + (glint.userData.offset as number)) + 1) * 0.08;
       }
     }
   }
