@@ -708,6 +708,89 @@ export function mountPine(
   bloom.instanceMatrix.needsUpdate = true;
   scene.add(bloom);
 
+  // Forest floor details: mushroom patches and fern-like plants make the woods
+  // feel discovered rather than like an empty grid. These are lightweight meshes.
+  const mushroomStemMat = trackM(new THREE.MeshStandardMaterial({ color: 0xe7d9b8, roughness: 0.9 }));
+  const mushroomCapMats = [
+    trackM(new THREE.MeshStandardMaterial({ color: 0xc85d43, roughness: 0.82 })),
+    trackM(new THREE.MeshStandardMaterial({ color: 0xe2a34e, roughness: 0.82 })),
+    trackM(new THREE.MeshStandardMaterial({ color: 0x9a6fba, roughness: 0.82 })),
+  ];
+  const mushroomStemGeo = trackG(new THREE.CylinderGeometry(0.045, 0.06, 0.18, 7));
+  const mushroomCapGeo = trackG(new THREE.SphereGeometry(0.13, 8, 6));
+  for (let patch = 0; patch < 12; patch++) {
+    const px = (rnd() * 2 - 1) * 21;
+    const pz = -34 + rnd() * 47;
+    if (Math.abs(px) < 4 && pz > 5 && pz < 17) continue;
+    const count = 2 + Math.floor(rnd() * 3);
+    for (let j = 0; j < count; j++) {
+      const mushroom = new THREE.Group();
+      const stem = new THREE.Mesh(mushroomStemGeo, mushroomStemMat);
+      stem.position.y = 0.09;
+      const cap = new THREE.Mesh(mushroomCapGeo, mushroomCapMats[Math.floor(rnd() * mushroomCapMats.length)]!);
+      cap.scale.set(1, 0.55, 1);
+      cap.position.y = 0.2;
+      mushroom.add(stem, cap);
+      mushroom.position.set(px + (rnd() - 0.5) * 1.1, 0, pz + (rnd() - 0.5) * 1.1);
+      mushroom.scale.setScalar(0.65 + rnd() * 0.65);
+      mushroom.rotation.y = rnd() * Math.PI * 2;
+      scene.add(mushroom);
+    }
+  }
+
+  const fernMat = trackM(new THREE.MeshStandardMaterial({ color: 0x356d3e, roughness: 1, side: THREE.DoubleSide }));
+  const fernGeo = trackG(new THREE.ConeGeometry(0.11, 0.72, 4));
+  for (let i = 0; i < 28; i++) {
+    const fern = new THREE.Group();
+    const fronds = 3 + Math.floor(rnd() * 3);
+    for (let j = 0; j < fronds; j++) {
+      const frond = new THREE.Mesh(fernGeo, fernMat);
+      frond.position.set(Math.cos(j * 2.4) * 0.12, 0.25, Math.sin(j * 2.4) * 0.12);
+      frond.rotation.z = (rnd() - 0.5) * 0.8;
+      frond.rotation.x = (rnd() - 0.5) * 0.8;
+      frond.scale.set(0.65, 0.8 + rnd() * 0.65, 0.65);
+      fern.add(frond);
+    }
+    fern.position.set((rnd() * 2 - 1) * 23, 0, -38 + rnd() * 54);
+    fern.rotation.y = rnd() * Math.PI * 2;
+    scene.add(fern);
+  }
+
+  // A tiny timber campfire beside the cabin, with a stone ring and warm glow.
+  const firePit = new THREE.Group();
+  firePit.position.set(-10.8, 0, 10.1);
+  scene.add(firePit);
+  const fireStoneGeo = trackG(new THREE.DodecahedronGeometry(0.18, 0));
+  const fireStoneMat = trackM(new THREE.MeshStandardMaterial({ color: 0x77786b, roughness: 1 }));
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2;
+    const stone = new THREE.Mesh(fireStoneGeo, fireStoneMat);
+    stone.position.set(Math.cos(a) * 0.62, 0.13, Math.sin(a) * 0.62);
+    stone.scale.set(1, 0.65, 0.8);
+    stone.rotation.y = a;
+    stone.castShadow = true;
+    firePit.add(stone);
+  }
+  const firewoodGeo = trackG(new THREE.CylinderGeometry(0.09, 0.1, 1.05, 7));
+  const firewoodMat = trackM(new THREE.MeshStandardMaterial({ color: 0x68452b, roughness: 1 }));
+  for (let i = 0; i < 3; i++) {
+    const wood = new THREE.Mesh(firewoodGeo, firewoodMat);
+    wood.rotation.z = Math.PI / 2;
+    wood.rotation.y = i * Math.PI / 3;
+    wood.position.y = 0.24 + i * 0.07;
+    firePit.add(wood);
+  }
+  const flameMat = trackM(new THREE.MeshStandardMaterial({ color: 0xff8a30, emissive: 0xff4d12, emissiveIntensity: 1.6, roughness: 0.5 }));
+  const flame = new THREE.Mesh(trackG(new THREE.ConeGeometry(0.24, 0.85, 7)), flameMat);
+  flame.position.y = 0.72;
+  firePit.add(flame);
+  const innerFlame = new THREE.Mesh(trackG(new THREE.ConeGeometry(0.13, 0.52, 6)), trackM(new THREE.MeshStandardMaterial({ color: 0xffd16a, emissive: 0xff8a20, emissiveIntensity: 2.1 })));
+  innerFlame.position.y = 0.64;
+  firePit.add(innerFlame);
+  const fireGlow = new THREE.PointLight(0xff8a3c, 1.7, 8, 2);
+  fireGlow.position.set(-10.8, 1.05, 10.1);
+  scene.add(fireGlow);
+
   const logs: Log[] = [];
   for (let i = 0; i < 28; i++) {
     const mesh = new THREE.Mesh(logGeo, logMaterials);
