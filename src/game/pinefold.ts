@@ -435,6 +435,29 @@ export function mountPine(
   const logGeo = trackG(new THREE.CylinderGeometry(0.13, 0.145, 1.04, 12, 1));
   const logMaterials: THREE.Material[] = [logSideMat, logEndMat, logEndMat];
 
+  const axeProfile = new THREE.Shape();
+  axeProfile.moveTo(-0.08, 0.045);
+  axeProfile.lineTo(0.02, 0.055);
+  axeProfile.lineTo(0.09, 0.12);
+  axeProfile.quadraticCurveTo(0.22, 0.145, 0.345, 0.065);
+  axeProfile.quadraticCurveTo(0.405, 0.015, 0.37, -0.045);
+  axeProfile.lineTo(0.26, -0.09);
+  axeProfile.lineTo(0.1, -0.075);
+  axeProfile.lineTo(0.015, -0.035);
+  axeProfile.lineTo(-0.08, -0.035);
+  axeProfile.closePath();
+  const axeHeadGeo = trackG(new THREE.ExtrudeGeometry(axeProfile, {
+    depth: 0.065, bevelEnabled: true, bevelSegments: 2, steps: 1,
+    bevelSize: 0.012, bevelThickness: 0.012, curveSegments: 6,
+  }));
+  const axeEdgeShape = new THREE.Shape();
+  axeEdgeShape.moveTo(0.342, 0.061);
+  axeEdgeShape.quadraticCurveTo(0.4, 0.015, 0.368, -0.04);
+  axeEdgeShape.lineTo(0.344, -0.047);
+  axeEdgeShape.quadraticCurveTo(0.366, 0.012, 0.329, 0.052);
+  axeEdgeShape.closePath();
+  const axeEdgeGeo = trackG(new THREE.ExtrudeGeometry(axeEdgeShape, { depth: 0.009, bevelEnabled: false, steps: 1 }));
+
   const trees: Tree[] = [];
   function addTree(kind: "pine" | "hard", x: number, z: number, scale: number) {
     const root = new THREE.Group();
@@ -774,11 +797,19 @@ export function mountPine(
     arm.position.set(0.28, 0.4, 0);
     const armMesh = new THREE.Mesh(trackG(new THREE.CapsuleGeometry(0.052, 0.24, 2, 7)), shirt);
     armMesh.position.y = -0.16;
-    const handle = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.05, 0.46, 0.05)), woodMat);
-    handle.position.set(0, -0.28, 0.08);
-    const axeHead = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.28, 0.14, 0.07)), steelMat);
-    axeHead.position.set(0.06, -0.48, 0.08);
-    arm.add(armMesh, handle, axeHead);
+    const handle = new THREE.Mesh(trackG(new THREE.CapsuleGeometry(0.032, 0.47, 4, 9)), woodMat);
+    handle.position.set(0, -0.285, 0.08);
+    handle.rotation.z = -0.035;
+    const grip = new THREE.Mesh(trackG(new THREE.CapsuleGeometry(0.039, 0.11, 3, 8)), gripMat);
+    grip.position.set(-0.006, -0.425, 0.08);
+    const ferrule = new THREE.Mesh(trackG(new THREE.CylinderGeometry(0.042, 0.046, 0.075, 10)), steelMat);
+    ferrule.position.set(0.012, -0.395, 0.08);
+    const axeHead = new THREE.Mesh(axeHeadGeo, steelMat);
+    axeHead.position.set(-0.005, -0.48, 0.075);
+    axeHead.castShadow = true;
+    const axeEdge = new THREE.Mesh(axeEdgeGeo, axeEdgeMat);
+    axeEdge.position.set(-0.005, -0.48, 0.155);
+    arm.add(armMesh, handle, grip, ferrule, axeHead, axeEdge);
     hip.add(arm);
     function leg(side: number) {
       const pivot = new THREE.Group();
@@ -1179,10 +1210,12 @@ export function mountPine(
       if (t) {
         chopCd = Math.max(0.16, 0.3 - axe * 0.03);
         chopAt(t, axe >= 4 ? 2 : 1);
-        hero.arm.rotation.x = -1.1;
+        hero.arm.rotation.x = -1.48;
+        hero.arm.rotation.z = 0.16;
       }
     }
-    hero.arm.rotation.x += (0.15 - hero.arm.rotation.x) * (1 - Math.exp(-8 * dt));
+    hero.arm.rotation.x += (0.12 - hero.arm.rotation.x) * (1 - Math.exp(-8.5 * dt));
+    hero.arm.rotation.z += (0 - hero.arm.rotation.z) * (1 - Math.exp(-7 * dt));
 
     if (pack < packCap()) {
       const got = tryPickup(player.x, player.z, packCap() - pack);
@@ -1242,7 +1275,10 @@ export function mountPine(
       const swing = moving ? Math.sin(hand.phase) * 0.72 : Math.sin(hand.phase * 0.4) * 0.025;
       hand.legL.rotation.x = swing;
       hand.legR.rotation.x = -swing;
-      if (hand.state !== "chop") hand.arm.rotation.x += (0.1 - hand.arm.rotation.x) * (1 - Math.exp(-8 * dt));
+      if (hand.state !== "chop") {
+        hand.arm.rotation.x += (0.1 - hand.arm.rotation.x) * (1 - Math.exp(-8 * dt));
+        hand.arm.rotation.z += (0 - hand.arm.rotation.z) * (1 - Math.exp(-7 * dt));
+      }
       hand.group.position.set(hand.x, moving ? Math.abs(Math.sin(hand.phase * 2)) * 0.025 : 0, hand.z);
       hand.group.rotation.z = moving ? Math.sin(hand.phase) * 0.018 : 0;
       if (Math.hypot(hand.vx, hand.vz) > 0.2) hand.group.rotation.y = Math.atan2(-hand.vx, -hand.vz);
