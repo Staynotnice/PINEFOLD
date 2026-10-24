@@ -60,6 +60,8 @@ export function Pinefold() {
     melee: false,
   });
   const stickId = useRef<number | null>(null);
+  const lookPointerId = useRef<number | null>(null);
+  const lastLookPoint = useRef<{ x: number; y: number } | null>(null);
   const knobRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>("menu");
   const [ready, setReady] = useState(false);
@@ -202,12 +204,45 @@ export function Pinefold() {
       <canvas
         ref={canvasRef}
         className="absolute inset-0 h-full w-full"
+        style={{ touchAction: "none" }}
         onPointerDown={(e) => {
-          if (e.button !== 0) return;
-          touchRef.current.attack = true;
+          if (e.pointerType === "touch") {
+            // Touch-drag anywhere on the open play area rotates the view.
+            lookPointerId.current = e.pointerId;
+            lastLookPoint.current = { x: e.clientX, y: e.clientY };
+            e.currentTarget.setPointerCapture(e.pointerId);
+            return;
+          }
+          if (e.button === 2 || (e.button === 0 && e.shiftKey)) {
+            lookPointerId.current = e.pointerId;
+            lastLookPoint.current = { x: e.clientX, y: e.clientY };
+            e.currentTarget.setPointerCapture(e.pointerId);
+            e.preventDefault();
+            return;
+          }
+          if (e.button === 0) touchRef.current.attack = true;
         }}
-        onPointerUp={() => {
+        onPointerMove={(e) => {
+          if (lookPointerId.current !== e.pointerId || !lastLookPoint.current) return;
+          const dx = e.clientX - lastLookPoint.current.x;
+          const dy = e.clientY - lastLookPoint.current.y;
+          touchRef.current.lookX += dx;
+          touchRef.current.lookY += dy;
+          lastLookPoint.current = { x: e.clientX, y: e.clientY };
+        }}
+        onPointerUp={(e) => {
           touchRef.current.attack = false;
+          if (lookPointerId.current === e.pointerId) {
+            lookPointerId.current = null;
+            lastLookPoint.current = null;
+          }
+        }}
+        onPointerCancel={(e) => {
+          touchRef.current.attack = false;
+          if (lookPointerId.current === e.pointerId) {
+            lookPointerId.current = null;
+            lastLookPoint.current = null;
+          }
         }}
         onPointerLeave={() => {
           touchRef.current.attack = false;
