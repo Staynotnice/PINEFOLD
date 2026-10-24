@@ -214,6 +214,20 @@ export function Pinefold() {
               <span className="text-[#e39a3c]">›</span>
               <span className={snap.saw ? "rounded-lg bg-[#f6f0e4] px-2 py-1 text-[#1c2a22]" : "rounded-lg bg-white/10 px-2 py-1 text-white/60"}>4 Process planks</span>
             </div>
+            <div className="w-fit min-w-64 rounded-2xl border border-[#e39a3c]/35 bg-[#10261c]/85 px-3 py-2 text-[#f6f0e4] shadow-lg">
+              <div className="mb-1 flex items-center justify-between gap-4 text-xs">
+                <span className="font-bold tracking-wider text-[#ffe08a] uppercase">Mill Operations</span>
+                <span className="text-white/65">{snap.hands} / 4 crew</span>
+              </div>
+              <div className="mb-2 h-2 overflow-hidden rounded-full bg-white/15">
+                <div className="h-full rounded-full bg-[#e39a3c] transition-all" style={{ width: `${Math.min(100, (snap.stock / Math.max(1, snap.stockCap)) * 100)}%` }} />
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-white/75">
+                <span>{snap.saw ? "Sawbench online" : "Sawbench locked"}</span>
+                <span>{snap.north ? "Hardwood unlocked" : "North forest locked"}</span>
+                <span>{snap.wheel ? "Creek buyer online" : "One yard buyer"}</span>
+              </div>
+            </div>
           </div>
           {snap.banner ? (
             <p className="font-display text-3xl text-[#ffe08a] italic drop-shadow-[0_2px_0_#1c1206]">{snap.banner}</p>
