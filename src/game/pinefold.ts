@@ -282,7 +282,7 @@ export function mountPine(
 
   let renderer: THREE.WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance" });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "low-power", stencil: false, depth: true, preserveDrawingBuffer: false });
   } catch (err) {
     hooks.onError(err instanceof Error ? err.message : "Could not start the forest.");
     throw err;
@@ -1707,9 +1707,9 @@ export function mountPine(
   function resize() {
     const w = canvas.clientWidth || 1;
     const h = canvas.clientHeight || 1;
-    const pixelCap = graphicsQuality === "high" ? (w < 900 ? 1.5 : 2) : graphicsQuality === "balanced" ? (w < 900 ? 1.2 : 1.5) : 1;
+    const pixelCap = graphicsQuality === "high" ? (w < 900 ? 1.25 : 1.75) : graphicsQuality === "balanced" ? (w < 900 ? 1 : 1.35) : 0.85;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelCap));
-    renderer.shadowMap.enabled = graphicsQuality !== "performance";
+    renderer.shadowMap.enabled = graphicsQuality === "high";
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
