@@ -129,8 +129,7 @@ function clamp(n: number, a: number, b: number) {
 function grassTex() {
   const c = document.createElement("canvas");
   c.width = 1024; c.height = 1024;
-  const g = c.getContext("2d");
-  if (!g) return new THREE.CanvasTexture(c);
+  const g = c.getContext("2d")!;
   const W = c.width, H = c.height;
   // Layered forest loam: broad color variation, fine blades, leaf litter and pebbles.
   const base = g.createLinearGradient(0, 0, W, H);
