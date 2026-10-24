@@ -5,6 +5,7 @@ import type { ControlsProbe, Phase, TouchInput } from "@/game/types";
 const STEP = 1 / 60;
 const SAVE_KEY = "pinefold-save";
 
+export type GraphicsQuality = "performance" | "balanced" | "high";
 export type UpgradeId = "axe" | "pack" | "hand" | "saw" | "north" | "cabin" | "wheel";
 
 export type Snap = {
@@ -64,6 +65,9 @@ export type PineApi = {
   resume: () => void;
   title: () => void;
   setMuted: (muted: boolean) => void;
+  setGraphicsQuality: (quality: GraphicsQuality) => void;
+  setCameraDistance: (distance: number) => void;
+  setReducedMotion: (reduced: boolean) => void;
   buy: (id: UpgradeId) => void;
   snap: () => Snap;
 };
@@ -232,7 +236,9 @@ export function mountPine(
 
   const audio = createAudio();
   audio.setMuted(muted);
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let graphicsQuality: GraphicsQuality = "high";
+  let cameraDistance = 8.4;
 
   let renderer: THREE.WebGLRenderer;
   try {
@@ -244,21 +250,22 @@ export function mountPine(
   renderer.setClearColor(0x8ec8ea, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.08;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x8ec8ea);
-  scene.fog = new THREE.FogExp2(0xd7ead4, 0.013);
+  scene.background = new THREE.Color(0xa6d4eb);
+  scene.fog = new THREE.FogExp2(0xd8e9cf, 0.0115);
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 180);
   scene.add(camera);
 
-  scene.add(new THREE.HemisphereLight(0xfff4dc, 0x3e7a48, 1.15));
-  const sun = new THREE.DirectionalLight(0xfff1d2, 2.5);
+  scene.add(new THREE.HemisphereLight(0xfff5df, 0x34603d, 1.35));
+  const sun = new THREE.DirectionalLight(0xfff0d8, 2.9);
   sun.position.set(18, 28, 12);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(1536, 1536);
+  sun.shadow.radius = 4;
   sun.shadow.camera.near = 4;
   sun.shadow.camera.far = 46;
   sun.shadow.camera.left = -16;
@@ -330,12 +337,12 @@ export function mountPine(
     new THREE.MeshStandardMaterial({ color: 0x3a9aaa, roughness: 0.22, metalness: 0.08, transparent: true, opacity: 0.92 }),
   );
 
-  const trunkGeo = trackG(new THREE.CylinderGeometry(0.16, 0.26, 1.7, 6));
-  const stumpGeo = trackG(new THREE.CylinderGeometry(0.22, 0.28, 0.28, 6));
-  const leafGeo = trackG(new THREE.ConeGeometry(1.25, 1.7, 8));
-  const leafGeo2 = trackG(new THREE.ConeGeometry(0.92, 1.35, 8));
-  const leafGeo3 = trackG(new THREE.ConeGeometry(0.55, 0.95, 7));
-  const hardGeo = trackG(new THREE.SphereGeometry(1.05, 7, 5));
+  const trunkGeo = trackG(new THREE.CylinderGeometry(0.16, 0.26, 1.7, 9));
+  const stumpGeo = trackG(new THREE.CylinderGeometry(0.22, 0.28, 0.28, 9));
+  const leafGeo = trackG(new THREE.ConeGeometry(1.25, 1.7, 11));
+  const leafGeo2 = trackG(new THREE.ConeGeometry(0.92, 1.35, 11));
+  const leafGeo3 = trackG(new THREE.ConeGeometry(0.55, 0.95, 9));
+  const hardGeo = trackG(new THREE.SphereGeometry(1.05, 10, 7));
   const logGeo = trackG(new THREE.CylinderGeometry(0.12, 0.14, 0.9, 6));
 
   const trees: Tree[] = [];
@@ -630,11 +637,11 @@ export function mountPine(
     const hip = new THREE.Group();
     hip.position.y = 0.86;
     group.add(hip);
-    const torso = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.42, 0.48, 0.26)), shirt);
-    torso.position.y = 0.28;
+    const torso = new THREE.Mesh(trackG(new THREE.CapsuleGeometry(0.19, 0.24, 3, 8)), shirt);
+    torso.position.y = 0.27;
     torso.castShadow = true;
     hip.add(torso);
-    const head = new THREE.Mesh(trackG(new THREE.SphereGeometry(0.16, 8, 6)), skinMat);
+    const head = new THREE.Mesh(trackG(new THREE.SphereGeometry(0.16, 12, 9)), skinMat);
     head.position.y = 0.66;
     head.castShadow = true;
     hip.add(head);
@@ -658,7 +665,7 @@ export function mountPine(
     hip.add(pack);
     const arm = new THREE.Group();
     arm.position.set(0.28, 0.4, 0);
-    const armMesh = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.1, 0.36, 0.1)), shirt);
+    const armMesh = new THREE.Mesh(trackG(new THREE.CapsuleGeometry(0.052, 0.24, 2, 7)), shirt);
     armMesh.position.y = -0.16;
     const handle = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.05, 0.46, 0.05)), woodMat);
     handle.position.set(0, -0.28, 0.08);
@@ -669,8 +676,8 @@ export function mountPine(
     function leg(side: number) {
       const pivot = new THREE.Group();
       pivot.position.set(side * 0.1, -0.02, 0);
-      const mesh = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.12, 0.42, 0.12)), pantMat);
-      mesh.position.y = -0.2;
+      const mesh = new THREE.Mesh(trackG(new THREE.CapsuleGeometry(0.065, 0.24, 2, 7)), pantMat);
+      mesh.position.y = -0.18;
       pivot.add(mesh);
       hip.add(pivot);
       return pivot;
@@ -1038,18 +1045,19 @@ export function mountPine(
     const speed = mag > 0.08 ? 7.1 : 0;
     const wishX = mx * speed;
     const wishZ = -my * speed;
-    player.vx = wishX;
-    player.vz = wishZ;
+    const velocityBlend = 1 - Math.exp(-14 * dt);
+    player.vx += (wishX - player.vx) * velocityBlend;
+    player.vz += (wishZ - player.vz) * velocityBlend;
     const next = moveBody(player.x, player.z, player.x + player.vx * dt, player.z + player.vz * dt, 0.34);
     player.x = next.x;
     player.z = next.z;
-    if (speed > 0.4) {
-      yawWant = Math.atan2(-wishX, -wishZ);
+    if (Math.hypot(player.vx, player.vz) > 0.4) {
+      yawWant = Math.atan2(-player.vx, -player.vz);
       let d = yawWant - player.yaw;
       while (d > Math.PI) d -= Math.PI * 2;
       while (d < -Math.PI) d += Math.PI * 2;
       player.yaw += d * (1 - Math.exp(-12 * dt));
-      bob += dt * 9;
+      bob += dt * (7.5 + Math.hypot(player.vx, player.vz) * 0.35);
       stepT -= dt;
       if (stepT <= 0) {
         stepT = 0.38;
@@ -1124,21 +1132,31 @@ export function mountPine(
       }
       hand.carryMesh.visible = hand.carry > 0;
       const moving = Math.hypot(hand.vx, hand.vz) > 0.2;
-      const swing = moving ? Math.sin(hand.phase) * 0.7 : 0;
+      const swing = moving ? Math.sin(hand.phase) * 0.72 : Math.sin(hand.phase * 0.4) * 0.025;
       hand.legL.rotation.x = swing;
       hand.legR.rotation.x = -swing;
-      hand.group.position.set(hand.x, 0, hand.z);
+      if (hand.state !== "chop") hand.arm.rotation.x += (0.1 - hand.arm.rotation.x) * (1 - Math.exp(-8 * dt));
+      hand.group.position.set(hand.x, moving ? Math.abs(Math.sin(hand.phase * 2)) * 0.025 : 0, hand.z);
+      hand.group.rotation.z = moving ? Math.sin(hand.phase) * 0.018 : 0;
       if (Math.hypot(hand.vx, hand.vz) > 0.2) hand.group.rotation.y = Math.atan2(-hand.vx, -hand.vz);
     }
 
     for (const t of trees) {
       if (t.state === "up") {
         t.upper.rotation.z *= Math.exp(-4 * dt);
-        if (!reduce) t.upper.rotation.y = Math.sin(performance.now() * 0.001 + t.sway) * 0.03;
+        if (!reduceMotion) {
+          const wind = Math.sin(performance.now() * 0.0008 + t.sway) * 0.028;
+          t.upper.rotation.y = wind;
+          t.upper.rotation.z += Math.sin(performance.now() * 0.00055 + t.sway) * 0.0008;
+        } else {
+          t.upper.rotation.y = 0;
+        }
       } else if (t.state === "fall") {
         t.fall += dt;
-        const u = Math.min(1, t.fall / 0.45);
-        t.upper.rotation.x = u * 1.35;
+        const u = Math.min(1, t.fall / 0.56);
+        const easedFall = 1 - Math.pow(1 - u, 2.2);
+        t.upper.rotation.x = easedFall * 1.35;
+        t.upper.rotation.z = Math.sin(u * Math.PI) * 0.08;
         if (t.fall >= 0.45) {
           t.state = "stump";
           t.upper.visible = false;
@@ -1152,6 +1170,8 @@ export function mountPine(
           t.hp = t.max;
           t.upper.visible = true;
           t.upper.rotation.x = 0;
+          t.upper.rotation.z = 0;
+          t.upper.rotation.y = 0;
           t.upper.scale.setScalar(0.2);
           t.growing = true;
         }
@@ -1237,11 +1257,13 @@ export function mountPine(
   function render(dt: number) {
     const w = canvas.clientWidth || 1;
     const h = canvas.clientHeight || 1;
-    const swing = Math.sin(bob) * 0.65;
+    const isMoving = Math.hypot(player.vx, player.vz) > 0.2;
+    const swing = isMoving ? Math.sin(bob) * 0.65 : Math.sin(performance.now() * 0.0014) * 0.025;
     hero.legL.rotation.x = swing;
     hero.legR.rotation.x = -swing;
-    hero.group.position.set(player.x, 0, player.z);
+    hero.group.position.set(player.x, isMoving ? Math.abs(Math.sin(bob * 2)) * 0.04 : Math.sin(performance.now() * 0.0013) * 0.012, player.z);
     hero.group.rotation.y = player.yaw;
+    hero.group.rotation.z = isMoving ? Math.sin(bob) * 0.028 : 0;
     const camTarget = new THREE.Vector3();
     if (phase === "menu") {
       menuT += dt;
@@ -1249,8 +1271,8 @@ export function mountPine(
       camera.position.set(Math.sin(ang) * 16, 18, 12 + Math.cos(ang) * 10);
       camTarget.set(0, 0.5, 4);
     } else {
-      const height = 11.2;
-      const back = 8.4;
+      const height = cameraDistance * 1.33;
+      const back = cameraDistance;
       const want = new THREE.Vector3(player.x, height, player.z + back);
       if (camera.position.y < 2) camera.position.copy(want);
       camera.position.lerp(want, 1 - Math.exp(-4 * dt));
@@ -1285,7 +1307,9 @@ export function mountPine(
   function resize() {
     const w = canvas.clientWidth || 1;
     const h = canvas.clientHeight || 1;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, w < 900 ? 1.5 : 2));
+    const pixelCap = graphicsQuality === "high" ? (w < 900 ? 1.5 : 2) : graphicsQuality === "balanced" ? (w < 900 ? 1.2 : 1.5) : 1;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelCap));
+    renderer.shadowMap.enabled = graphicsQuality !== "performance";
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -1429,6 +1453,26 @@ export function mountPine(
       muted = next;
       audio.setMuted(next);
       persist();
+    },
+    setGraphicsQuality(next) {
+      graphicsQuality = next;
+      sun.shadow.mapSize.set(next === "high" ? 1536 : next === "balanced" ? 1024 : 512, next === "high" ? 1536 : next === "balanced" ? 1024 : 512);
+      sun.shadow.needsUpdate = true;
+      resize();
+    },
+    setCameraDistance(distance) {
+      cameraDistance = clamp(distance, 6, 12);
+    },
+    setReducedMotion(reduced) {
+      reduceMotion = reduced;
+      if (reduced) {
+        for (const tree of trees) {
+          if (tree.state === "up") {
+            tree.upper.rotation.y = 0;
+            tree.upper.rotation.z = 0;
+          }
+        }
+      }
     },
     buy,
     snap,
