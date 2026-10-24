@@ -417,9 +417,10 @@ export function mountPine(
     const c = document.createElement("canvas"); c.width = 256; c.height = 256;
     const g = c.getContext("2d")!;
     const base = g.createLinearGradient(0, 0, 256, 256);
-    base.addColorStop(0, "#527944"); base.addColorStop(.5, "#779d4e"); base.addColorStop(1, "#284f32");
+    // Keep the leaf texture mostly neutral so each tree material can tint it without crushing the greens.
+    base.addColorStop(0, "#aeb4a2"); base.addColorStop(.5, "#d0d3c0"); base.addColorStop(1, "#858d7b");
     g.fillStyle = base; g.fillRect(0, 0, 256, 256);
-    const colors = ["rgba(171,198,100,.36)", "rgba(24,66,36,.42)", "rgba(102,145,64,.45)", "rgba(210,201,114,.18)"];
+    const colors = ["rgba(245,245,228,.38)", "rgba(38,45,32,.34)", "rgba(171,177,153,.43)", "rgba(228,224,202,.22)"];
     for (let i = 0; i < 260; i++) {
       const x = Math.random() * 256, y = Math.random() * 256, w = 5 + Math.random() * 15, h = 3 + Math.random() * 9;
       g.save(); g.translate(x, y); g.rotate((Math.random() - .5) * .9);
@@ -506,7 +507,7 @@ export function mountPine(
   const stoneTex = stoneTexture();
   const endGrainTex = endGrainTexture();
   const trunkMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: barkTex, bumpMap: barkTex, bumpScale: 0.045, roughness: 0.94 }));
-  const stumpMat = trackM(new THREE.MeshStandardMaterial({ color: 0x67442a, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.98 }));
+  const stumpMat = trackM(new THREE.MeshStandardMaterial({ color: 0x99714b, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.98 }));
   const stumpCutMat = trackM(new THREE.MeshStandardMaterial({ color: 0xe0b17a, map: endGrainTex, bumpMap: endGrainTex, bumpScale: 0.025, roughness: 0.9 }));
   const leafA = trackM(new THREE.MeshStandardMaterial({ color: 0x78a354, map: leafTex, roughness: 0.9 }));
   const leafB = trackM(new THREE.MeshStandardMaterial({ color: 0x8cb65b, map: leafTex, roughness: 0.88 }));
@@ -514,7 +515,7 @@ export function mountPine(
   const hardMat = trackM(new THREE.MeshStandardMaterial({ color: 0x769447, map: leafTex, roughness: 0.91 }));
   const hardMat2 = trackM(new THREE.MeshStandardMaterial({ color: 0x4d773a, map: leafTex, roughness: 0.92 }));
   const woodMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: plankTex, bumpMap: plankTex, bumpScale: 0.022, roughness: 0.86 }));
-  const logSideMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc08c55, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.94 }));
+  const logSideMat = trackM(new THREE.MeshStandardMaterial({ color: 0xf2dfc0, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.94 }));
   const logEndMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffd9a1, map: endGrainTex, bumpMap: endGrainTex, bumpScale: 0.012, roughness: 0.88 }));
   const dirtMat = trackM(new THREE.MeshStandardMaterial({ color: 0x8d6a43, roughness: 0.92 }));
   const skinMat = trackM(new THREE.MeshStandardMaterial({ color: 0xe0b48a, roughness: 0.7 }));
