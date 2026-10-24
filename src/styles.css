@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #143022;
+  --color-bg-deep: #0c1e16;
+  --color-surface: #f6f0e4;
+  --color-fg: #1c2a22;
+  --color-muted: #5e6d62;
+  --color-primary: #e39a3c;
+  --color-primary-fg: #1c1206;
+  --color-accent: #2f6b45;
+  --color-border: #d9cdb8;
+  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
+  --radius: 0.9rem;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    background: #8ec8ea;
+    color: var(--color-fg);
+  }
+}
+
+.game-root {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+.menu-scrim {
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-bg) 94%, transparent) 0%,
+    color-mix(in srgb, var(--color-bg) 62%, transparent) 38%,
+    transparent 70%
+  );
+}
+
+.game-edge {
+  background: radial-gradient(circle at center, transparent 55%, rgba(8, 20, 14, 0.45) 100%);
+}
+
+.safe-b {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@keyframes banner-in {
+  0% {
+    opacity: 0;
+    transform: translateY(0.4rem);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.banner-in {
+  animation: banner-in 2.4s ease forwards;
+}
+
+@keyframes pop-up {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0.4rem);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -1.4rem);
+  }
+}
+
+.pop-up {
+  animation: pop-up 0.9s ease forwards;
+}
+
+.hitmark {
+  opacity: 0;
+}
+
+.safe-t {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.safe-top-btn {
+  top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.crosshair {
+  --gap: 6px;
+}
+
+.crosshair span {
+  position: absolute;
+  display: block;
+  background: color-mix(in srgb, var(--color-fg) 90%, transparent);
+}
+
+.crosshair span.up,
+.crosshair span.down {
+  width: 2px;
+  height: 10px;
+  left: -1px;
+}
+
+.crosshair span.up {
+  top: calc(-1 * var(--gap) - 10px);
+}
+
+.crosshair span.down {
+  top: var(--gap);
+}
+
+.crosshair span.left,
+.crosshair span.right {
+  height: 2px;
+  width: 10px;
+  top: -1px;
+}
+
+.crosshair span.left {
+  left: calc(-1 * var(--gap) - 10px);
+}
+
+.crosshair span.right {
+  left: var(--gap);
+}
+
+.crosshair.is-hit span {
+  background: var(--color-primary);
+}
+
+.hitmark.is-hit {
+  opacity: 1;
+}
+
+@media (pointer: fine) and (min-width: 960px) {
+  .touch-only {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-in {
+    animation: none;
+    opacity: 1;
+  }
+}
