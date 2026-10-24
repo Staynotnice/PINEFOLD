@@ -294,56 +294,134 @@ export function mountPine(
 
   const geos = new Set<THREE.BufferGeometry>();
   const mats = new Set<THREE.Material>();
-  const trackG = <T extends THREE.BufferGeometry>(g: T) => {
-    geos.add(g);
-    return g;
-  };
-  const trackM = <T extends THREE.Material>(m: T) => {
-    mats.add(m);
-    return m;
-  };
+  const textures = new Set<THREE.Texture>();
+  const trackG = <T extends THREE.BufferGeometry>(g: T) => { geos.add(g); return g; };
+  const trackM = <T extends THREE.Material>(m: T) => { mats.add(m); return m; };
+  const trackT = <T extends THREE.Texture>(texture: T) => { textures.add(texture); return texture; };
 
   const ground = new THREE.Mesh(
     trackG(new THREE.PlaneGeometry(100, 100)),
-    trackM(new THREE.MeshStandardMaterial({ map: grassTex(), roughness: 0.96, metalness: 0 })),
+    trackM(new THREE.MeshStandardMaterial({ map: trackT(grassTex()), roughness: 0.98, metalness: 0 })),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
 
-  function grit(dark: string, light: string) {
-    const c = document.createElement("canvas");
-    c.width = 64;
-    c.height = 64;
-    const g = c.getContext("2d");
-    if (!g) return new THREE.CanvasTexture(c);
-    g.fillStyle = "#9a9a9a";
-    g.fillRect(0, 0, 64, 64);
-    for (let i = 0; i < 90; i++) {
-      g.fillStyle = i % 2 ? dark : light;
-      g.fillRect(Math.random() * 64, Math.random() * 64, 2 + Math.random() * 5, 2 + Math.random() * 3);
-    }
-    const tex = new THREE.CanvasTexture(c);
+  function materialTexture(canvas: HTMLCanvasElement, repeatX = 1, repeatY = 1) {
+    const tex = trackT(new THREE.CanvasTexture(canvas));
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
+    tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(repeatX, repeatY); tex.anisotropy = 8; tex.needsUpdate = true;
     return tex;
   }
 
-  const trunkMat = trackM(new THREE.MeshStandardMaterial({ color: 0x6d452c, map: grit("#6a6a6a", "#c8c8c8"), roughness: 0.92 }));
-  const stumpMat = trackM(new THREE.MeshStandardMaterial({ color: 0x5a3a26, roughness: 0.95 }));
-  const leafA = trackM(new THREE.MeshStandardMaterial({ color: 0x2c7a38, map: grit("#7a7a7a", "#d0d0d0"), roughness: 0.82 }));
-  const leafB = trackM(new THREE.MeshStandardMaterial({ color: 0x3e9a4c, map: grit("#808080", "#e0e0e0"), roughness: 0.8 }));
-  const leafC = trackM(new THREE.MeshStandardMaterial({ color: 0x1f6b34, roughness: 0.84 }));
-  const hardMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc46a2e, roughness: 0.84 }));
-  const hardMat2 = trackM(new THREE.MeshStandardMaterial({ color: 0x8d4e24, roughness: 0.86 }));
-  const woodMat = trackM(new THREE.MeshStandardMaterial({ color: 0xa56b3c, roughness: 0.78 }));
+  function barkTexture() {
+    const c = document.createElement("canvas"); c.width = 512; c.height = 512;
+    const g = c.getContext("2d")!;
+    const base = g.createLinearGradient(0, 0, 512, 0);
+    base.addColorStop(0, "#50311f"); base.addColorStop(.18, "#91603b"); base.addColorStop(.4, "#644027");
+    base.addColorStop(.61, "#a17249"); base.addColorStop(.82, "#5a3824"); base.addColorStop(1, "#7d5032");
+    g.fillStyle = base; g.fillRect(0, 0, 512, 512);
+    for (let i = 0; i < 185; i++) {
+      const x = Math.random() * 512;
+      g.strokeStyle = Math.random() > .5 ? "rgba(37,21,13,.42)" : "rgba(222,170,112,.23)";
+      g.lineWidth = 1 + Math.random() * 6;
+      g.beginPath(); g.moveTo(x, 0);
+      g.bezierCurveTo(x + (Math.random() - .5) * 22, 160, x + (Math.random() - .5) * 18, 340, x + (Math.random() - .5) * 12, 512);
+      g.stroke();
+    }
+    for (let i = 0; i < 11; i++) {
+      const x = 18 + Math.random() * 476, y = 18 + Math.random() * 476;
+      g.strokeStyle = "rgba(39,23,14,.46)"; g.lineWidth = 3;
+      g.beginPath(); g.ellipse(x, y, 5 + Math.random() * 10, 10 + Math.random() * 20, (Math.random() - .5) * .25, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = "rgba(221,166,101,.36)"; g.lineWidth = 1.2;
+      g.beginPath(); g.ellipse(x + 1, y, 2 + Math.random() * 4, 5 + Math.random() * 8, 0, 0, Math.PI * 2); g.stroke();
+    }
+    for (let i = 0; i < 1800; i++) {
+      g.fillStyle = Math.random() > .5 ? "rgba(22,15,10,.13)" : "rgba(255,221,160,.1)";
+      g.fillRect(Math.random() * 512, Math.random() * 512, 1 + Math.random() * 2, 1 + Math.random() * 5);
+    }
+    return materialTexture(c, 1, 1.25);
+  }
+
+  function foliageTexture() {
+    const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+    const g = c.getContext("2d")!;
+    const base = g.createLinearGradient(0, 0, 256, 256);
+    base.addColorStop(0, "#527944"); base.addColorStop(.5, "#779d4e"); base.addColorStop(1, "#284f32");
+    g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+    const colors = ["rgba(171,198,100,.36)", "rgba(24,66,36,.42)", "rgba(102,145,64,.45)", "rgba(210,201,114,.18)"];
+    for (let i = 0; i < 260; i++) {
+      const x = Math.random() * 256, y = Math.random() * 256, w = 5 + Math.random() * 15, h = 3 + Math.random() * 9;
+      g.save(); g.translate(x, y); g.rotate((Math.random() - .5) * .9);
+      g.fillStyle = colors[Math.floor(Math.random() * colors.length)]!;
+      g.beginPath(); g.ellipse(0, 0, w, h, 0, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "rgba(229,232,155,.28)"; g.lineWidth = .7; g.beginPath(); g.moveTo(-w * .7, 0); g.lineTo(w * .7, 0); g.stroke();
+      g.restore();
+    }
+    return materialTexture(c);
+  }
+
+  function plankTexture() {
+    const c = document.createElement("canvas"); c.width = 512; c.height = 256;
+    const g = c.getContext("2d")!;
+    const base = g.createLinearGradient(0, 0, 0, 256);
+    base.addColorStop(0, "#97623a"); base.addColorStop(.28, "#c08a55"); base.addColorStop(.52, "#a87443"); base.addColorStop(.78, "#d09b61"); base.addColorStop(1, "#82512f");
+    g.fillStyle = base; g.fillRect(0, 0, 512, 256);
+    [84, 170].forEach((y) => { g.fillStyle = "rgba(56,32,18,.32)"; g.fillRect(0, y, 512, 3); g.fillStyle = "rgba(255,213,151,.2)"; g.fillRect(0, y + 3, 512, 1); });
+    for (let i = 0; i < 155; i++) {
+      const y = Math.random() * 256, x = Math.random() * 512;
+      g.strokeStyle = Math.random() > .52 ? "rgba(67,39,21,.27)" : "rgba(255,219,160,.19)";
+      g.lineWidth = .5 + Math.random() * 1.5;
+      g.beginPath(); g.moveTo(x, y); g.bezierCurveTo(x + 35, y + (Math.random() - .5) * 6, x + 72, y + (Math.random() - .5) * 6, x + 125, y + (Math.random() - .5) * 5); g.stroke();
+    }
+    for (let i = 0; i < 7; i++) {
+      const x = Math.random() * 512, y = 14 + Math.random() * 228;
+      g.strokeStyle = "rgba(62,35,18,.38)"; g.lineWidth = 1.6;
+      g.beginPath(); g.ellipse(x, y, 4 + Math.random() * 6, 2 + Math.random() * 4, 0, 0, Math.PI * 2); g.stroke();
+    }
+    return materialTexture(c, 1.4, 1);
+  }
+
+  function endGrainTexture() {
+    const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+    const g = c.getContext("2d")!;
+    const base = g.createRadialGradient(114, 120, 2, 126, 124, 150);
+    base.addColorStop(0, "#e4b878"); base.addColorStop(.38, "#b9854d"); base.addColorStop(.7, "#d5a266"); base.addColorStop(1, "#80512f");
+    g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 17; i++) {
+      g.strokeStyle = i % 2 ? "rgba(88,51,28,.42)" : "rgba(255,225,172,.32)";
+      g.lineWidth = i % 4 === 0 ? 2.2 : .9;
+      g.beginPath(); g.ellipse(116 + Math.sin(i * 1.7) * 6, 124 + Math.cos(i * 1.3) * 5, 6 + i * 6.8, 5 + i * 6.6, (i % 3) * .04, 0, Math.PI * 2); g.stroke();
+    }
+    g.strokeStyle = "rgba(77,46,24,.48)"; g.lineWidth = 1.3;
+    g.beginPath(); g.moveTo(126, 120); g.lineTo(158, 89); g.moveTo(128, 126); g.lineTo(155, 150); g.stroke();
+    return materialTexture(c);
+  }
+
+  const barkTex = barkTexture();
+  const leafTex = foliageTexture();
+  const plankTex = plankTexture();
+  const endGrainTex = endGrainTexture();
+  const trunkMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: barkTex, bumpMap: barkTex, bumpScale: 0.045, roughness: 0.94 }));
+  const stumpMat = trackM(new THREE.MeshStandardMaterial({ color: 0x67442a, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.98 }));
+  const stumpCutMat = trackM(new THREE.MeshStandardMaterial({ color: 0xe0b17a, map: endGrainTex, bumpMap: endGrainTex, bumpScale: 0.025, roughness: 0.9 }));
+  const leafA = trackM(new THREE.MeshStandardMaterial({ color: 0x78a354, map: leafTex, roughness: 0.9 }));
+  const leafB = trackM(new THREE.MeshStandardMaterial({ color: 0x8cb65b, map: leafTex, roughness: 0.88 }));
+  const leafC = trackM(new THREE.MeshStandardMaterial({ color: 0x3e723d, map: leafTex, roughness: 0.91 }));
+  const hardMat = trackM(new THREE.MeshStandardMaterial({ color: 0x769447, map: leafTex, roughness: 0.91 }));
+  const hardMat2 = trackM(new THREE.MeshStandardMaterial({ color: 0x4d773a, map: leafTex, roughness: 0.92 }));
+  const woodMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: plankTex, bumpMap: plankTex, bumpScale: 0.022, roughness: 0.86 }));
+  const logSideMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc08c55, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.94 }));
+  const logEndMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffd9a1, map: endGrainTex, bumpMap: endGrainTex, bumpScale: 0.012, roughness: 0.88 }));
   const dirtMat = trackM(new THREE.MeshStandardMaterial({ color: 0x8d6a43, roughness: 0.9 }));
   const skinMat = trackM(new THREE.MeshStandardMaterial({ color: 0xe0b48a, roughness: 0.62 }));
   const shirtMat = trackM(new THREE.MeshStandardMaterial({ color: 0x3d6fbf, roughness: 0.7 }));
   const pantMat = trackM(new THREE.MeshStandardMaterial({ color: 0x243044, roughness: 0.78 }));
   const hatMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc4552a, roughness: 0.72 }));
-  const steelMat = trackM(new THREE.MeshStandardMaterial({ color: 0xb7c0c4, roughness: 0.35, metalness: 0.7 }));
+  const steelMat = trackM(new THREE.MeshStandardMaterial({ color: 0xd7e0e2, roughness: 0.24, metalness: 0.86 }));
+  const axeEdgeMat = trackM(new THREE.MeshStandardMaterial({ color: 0xf2f5ed, roughness: 0.18, metalness: 0.92 }));
+  const gripMat = trackM(new THREE.MeshStandardMaterial({ color: 0x57351f, roughness: 0.88 }));
   const waterMat = trackM(
     new THREE.MeshStandardMaterial({ color: 0x3a9aaa, roughness: 0.22, metalness: 0.08, transparent: true, opacity: 0.92 }),
   );
@@ -354,13 +432,14 @@ export function mountPine(
   const leafGeo2 = trackG(new THREE.ConeGeometry(0.92, 1.35, 11));
   const leafGeo3 = trackG(new THREE.ConeGeometry(0.55, 0.95, 9));
   const hardGeo = trackG(new THREE.SphereGeometry(1.05, 10, 7));
-  const logGeo = trackG(new THREE.CylinderGeometry(0.12, 0.14, 0.9, 6));
+  const logGeo = trackG(new THREE.CylinderGeometry(0.13, 0.145, 1.04, 12, 1));
+  const logMaterials: THREE.Material[] = [logSideMat, logEndMat, logEndMat];
 
   const trees: Tree[] = [];
   function addTree(kind: "pine" | "hard", x: number, z: number, scale: number) {
     const root = new THREE.Group();
     root.position.set(x, 0, z);
-    const stump = new THREE.Mesh(stumpGeo, stumpMat);
+    const stump = new THREE.Mesh(stumpGeo, [stumpMat, stumpCutMat, stumpCutMat]);
     stump.position.y = 0.12;
     root.add(stump);
     const upper = new THREE.Group();
@@ -486,7 +565,7 @@ export function mountPine(
 
   const logs: Log[] = [];
   for (let i = 0; i < 28; i++) {
-    const mesh = new THREE.Mesh(logGeo, woodMat);
+    const mesh = new THREE.Mesh(logGeo, logMaterials);
     mesh.rotation.z = Math.PI / 2;
     mesh.visible = false;
     scene.add(mesh);
@@ -537,7 +616,7 @@ export function mountPine(
   scene.add(stackRoot);
   const stackLogs: THREE.Mesh[] = [];
   for (let i = 0; i < 12; i++) {
-    const m = new THREE.Mesh(logGeo, woodMat);
+    const m = new THREE.Mesh(logGeo, logMaterials);
     m.rotation.z = Math.PI / 2;
     m.rotation.y = i % 2 ? 0.15 : -0.2;
     m.visible = false;
@@ -712,7 +791,7 @@ export function mountPine(
     }
     const legL = leg(-1);
     const legR = leg(1);
-    const carryMesh = new THREE.Mesh(logGeo, woodMat);
+    const carryMesh = new THREE.Mesh(logGeo, logMaterials);
     carryMesh.rotation.z = Math.PI / 2;
     carryMesh.position.set(0, 0.42, 0.22);
     carryMesh.visible = false;
@@ -1464,6 +1543,7 @@ export function mountPine(
       for (const m of mats) m.dispose();
       boardTex.dispose();
       renderer.dispose();
+      for (const texture of textures) texture.dispose();
       delete window.__controlsTest;
       delete window.__saltReady;
     },
