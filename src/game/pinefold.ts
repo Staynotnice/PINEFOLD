@@ -383,6 +383,37 @@ export function mountPine(
     return materialTexture(c, 1.4, 1);
   }
 
+  function fabricTexture() {
+    const c = document.createElement("canvas"); c.width = 128; c.height = 128;
+    const g = c.getContext("2d")!;
+    g.fillStyle = "#d2d0c7"; g.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 620; i++) {
+      g.strokeStyle = Math.random() > .5 ? "rgba(255,255,255,.17)" : "rgba(43,39,28,.11)";
+      g.lineWidth = .6 + Math.random() * .5;
+      const x = Math.random() * 128, y = Math.random() * 128;
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + (Math.random() > .5 ? 1 : 0), y + 2 + Math.random() * 3); g.stroke();
+    }
+    return materialTexture(c, 1.8, 1.8);
+  }
+
+  function stoneTexture() {
+    const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+    const g = c.getContext("2d")!;
+    const base = g.createLinearGradient(0, 0, 256, 256);
+    base.addColorStop(0, "#9b9d92"); base.addColorStop(.42, "#696e64"); base.addColorStop(1, "#b3aa96");
+    g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 1700; i++) {
+      g.fillStyle = Math.random() > .48 ? "rgba(31,37,31,.2)" : "rgba(245,239,216,.18)";
+      g.fillRect(Math.random() * 256, Math.random() * 256, .5 + Math.random() * 2.4, .5 + Math.random() * 2.2);
+    }
+    for (let i = 0; i < 24; i++) {
+      const x = Math.random() * 256, y = Math.random() * 256;
+      g.strokeStyle = "rgba(43,47,40,.22)"; g.lineWidth = .8;
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + (Math.random() - .5) * 16, y + 3 + Math.random() * 15); g.stroke();
+    }
+    return materialTexture(c);
+  }
+
   function endGrainTexture() {
     const c = document.createElement("canvas"); c.width = 256; c.height = 256;
     const g = c.getContext("2d")!;
@@ -402,6 +433,8 @@ export function mountPine(
   const barkTex = barkTexture();
   const leafTex = foliageTexture();
   const plankTex = plankTexture();
+  const fabricTex = fabricTexture();
+  const stoneTex = stoneTexture();
   const endGrainTex = endGrainTexture();
   const trunkMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: barkTex, bumpMap: barkTex, bumpScale: 0.045, roughness: 0.94 }));
   const stumpMat = trackM(new THREE.MeshStandardMaterial({ color: 0x67442a, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.98 }));
@@ -414,11 +447,11 @@ export function mountPine(
   const woodMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: plankTex, bumpMap: plankTex, bumpScale: 0.022, roughness: 0.86 }));
   const logSideMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc08c55, map: barkTex, bumpMap: barkTex, bumpScale: 0.035, roughness: 0.94 }));
   const logEndMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffd9a1, map: endGrainTex, bumpMap: endGrainTex, bumpScale: 0.012, roughness: 0.88 }));
-  const dirtMat = trackM(new THREE.MeshStandardMaterial({ color: 0x8d6a43, roughness: 0.9 }));
-  const skinMat = trackM(new THREE.MeshStandardMaterial({ color: 0xe0b48a, roughness: 0.62 }));
-  const shirtMat = trackM(new THREE.MeshStandardMaterial({ color: 0x3d6fbf, roughness: 0.7 }));
-  const pantMat = trackM(new THREE.MeshStandardMaterial({ color: 0x243044, roughness: 0.78 }));
-  const hatMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc4552a, roughness: 0.72 }));
+  const dirtMat = trackM(new THREE.MeshStandardMaterial({ color: 0x8d6a43, roughness: 0.92 }));
+  const skinMat = trackM(new THREE.MeshStandardMaterial({ color: 0xe0b48a, roughness: 0.7 }));
+  const shirtMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: fabricTex, roughness: 0.83 }));
+  const pantMat = trackM(new THREE.MeshStandardMaterial({ color: 0x243044, map: fabricTex, roughness: 0.88 }));
+  const hatMat = trackM(new THREE.MeshStandardMaterial({ color: 0xc4552a, map: fabricTex, roughness: 0.86 }));
   const steelMat = trackM(new THREE.MeshStandardMaterial({ color: 0xd7e0e2, roughness: 0.24, metalness: 0.86 }));
   const axeEdgeMat = trackM(new THREE.MeshStandardMaterial({ color: 0xf2f5ed, roughness: 0.18, metalness: 0.92 }));
   const gripMat = trackM(new THREE.MeshStandardMaterial({ color: 0x57351f, roughness: 0.88 }));
@@ -540,7 +573,7 @@ export function mountPine(
 
   const tuft = new THREE.InstancedMesh(
     trackG(new THREE.ConeGeometry(0.16, 0.5, 4)),
-    trackM(new THREE.MeshStandardMaterial({ color: 0x3c9a46, roughness: 1 })),
+    trackM(new THREE.MeshStandardMaterial({ color: 0x9fbd65, map: leafTex, roughness: 1 })),
     180,
   );
   const tuftDummy = new THREE.Object3D();
@@ -561,8 +594,8 @@ export function mountPine(
   tuft.instanceMatrix.needsUpdate = true;
   scene.add(tuft);
 
-  const rockMat = trackM(new THREE.MeshStandardMaterial({ color: 0x8d877c, roughness: 0.95 }));
-  const rockGeo = trackG(new THREE.SphereGeometry(0.35, 6, 5));
+  const rockMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: stoneTex, bumpMap: stoneTex, bumpScale: 0.035, roughness: 0.96 }));
+  const rockGeo = trackG(new THREE.SphereGeometry(0.35, 10, 8));
   for (let i = 0; i < 14; i++) {
     const rock = new THREE.Mesh(rockGeo, rockMat);
     rock.position.set((rnd() * 2 - 1) * 22, 0.08, -20 + rnd() * 28);
@@ -838,7 +871,7 @@ export function mountPine(
   }
 
   const shirtHands = [0xc4552a, 0x2f6b45, 0x7a4a8a, 0xb08930].map(
-    (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7 }),
+    (c) => new THREE.MeshStandardMaterial({ color: c, map: fabricTex, roughness: 0.82 }),
   );
   for (const m of shirtHands) mats.add(m);
 
