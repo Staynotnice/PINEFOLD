@@ -208,7 +208,7 @@ export function Pinefold() {
       ) : null}
 
       {playing ? (
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-2 px-3 pr-16 pt-[max(0.6rem,env(safe-area-inset-top))]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-3 px-3 pr-28 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 sm:pr-56 sm:pt-4">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
             <Chip mark={<Coins className="size-5" />} label="Coins" hint="Spend these on camp upgrades" value={String(snap.coins)} />
             <Chip
@@ -423,6 +423,7 @@ export function Pinefold() {
                 {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
               </button>
             </div>
+            <button type="button" className="mt-3 flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm text-white/75 hover:bg-white/10" onClick={() => setSettingsOpen(true)}><Settings className="size-4" /> Graphics & settings</button>
             <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-[#f6f0e4]/70">
               <li>WASD or the stick</li>
               <li>Space or Chop</li>
@@ -450,6 +451,7 @@ export function Pinefold() {
               >
                 Resume
               </button>
+              <button type="button" className="min-h-12 rounded-full border border-border font-semibold" onClick={() => setSettingsOpen(true)}><Settings className="mr-2 inline size-4" /> Settings</button>
               <button
                 type="button"
                 className="min-h-12 rounded-full border border-border font-semibold"
