@@ -927,6 +927,107 @@ export function mountPine(
   cabinRoot.add(glowWin);
   cabinParts.push(glowWin);
 
+
+  // A welcoming timber-yard sign gives the entrance a clear landmark.
+  const signRoot = new THREE.Group();
+  signRoot.position.set(0, 0, 7.45);
+  scene.add(signRoot);
+  const signPostGeo = trackG(new THREE.BoxGeometry(0.16, 1.8, 0.16));
+  const signPostMat = trackM(new THREE.MeshStandardMaterial({ color: 0x68452b, map: plankTex, roughness: 0.92 }));
+  for (const x of [-1.25, 1.25]) {
+    const post = new THREE.Mesh(signPostGeo, signPostMat);
+    post.position.set(x, 0.9, 0);
+    post.castShadow = true;
+    signRoot.add(post);
+  }
+  const signBoard = new THREE.Mesh(
+    trackG(new THREE.BoxGeometry(3.1, 0.78, 0.16)),
+    trackM(new THREE.MeshStandardMaterial({ color: 0xffffff, map: plankTex, roughness: 0.9 })),
+  );
+  signBoard.position.y = 1.55;
+  signBoard.castShadow = true;
+  signRoot.add(signBoard);
+  const signCanvas = document.createElement("canvas");
+  signCanvas.width = 512; signCanvas.height = 128;
+  const signCtx = signCanvas.getContext("2d");
+  if (signCtx) {
+    signCtx.fillStyle = "#59391f"; signCtx.fillRect(0, 0, 512, 128);
+    signCtx.strokeStyle = "#e7bd79"; signCtx.lineWidth = 7; signCtx.strokeRect(9, 9, 494, 110);
+    signCtx.fillStyle = "#f5dfac"; signCtx.textAlign = "center"; signCtx.textBaseline = "middle";
+    signCtx.font = "bold 58px Georgia"; signCtx.fillText("PINEFOLD", 256, 63);
+  }
+  const signTex = trackT(new THREE.CanvasTexture(signCanvas));
+  signTex.colorSpace = THREE.SRGBColorSpace;
+  const signFace = new THREE.Mesh(
+    trackG(new THREE.PlaneGeometry(2.88, 0.62)),
+    trackM(new THREE.MeshBasicMaterial({ map: signTex, toneMapped: false })),
+  );
+  signFace.position.set(0, 1.55, 0.091);
+  signRoot.add(signFace);
+
+  // Small camp furnishings make the yard feel lived-in without adding heavy geometry.
+  const benchRoot = new THREE.Group();
+  benchRoot.position.set(-9.6, 0, 7.1);
+  benchRoot.rotation.y = -0.22;
+  scene.add(benchRoot);
+  const benchWood = trackM(new THREE.MeshStandardMaterial({ color: 0xb9824d, map: plankTex, roughness: 0.91 }));
+  const benchLegGeo = trackG(new THREE.BoxGeometry(0.12, 0.52, 0.12));
+  for (const x of [-0.72, 0.72]) {
+    const leg = new THREE.Mesh(benchLegGeo, benchWood);
+    leg.position.set(x, 0.26, 0); leg.castShadow = true; benchRoot.add(leg);
+  }
+  const benchSeat = new THREE.Mesh(trackG(new THREE.BoxGeometry(1.75, 0.13, 0.48)), benchWood);
+  benchSeat.position.y = 0.55; benchSeat.castShadow = true; benchRoot.add(benchSeat);
+  const benchBack = new THREE.Mesh(trackG(new THREE.BoxGeometry(1.75, 0.48, 0.1)), benchWood);
+  benchBack.position.set(0, 0.83, -0.2); benchBack.castShadow = true; benchRoot.add(benchBack);
+
+  const crateMat = trackM(new THREE.MeshStandardMaterial({ color: 0x9b6b3e, map: plankTex, roughness: 0.94 }));
+  for (const [x, z, scale] of [[9.3, 9.6, 0.8], [9.8, 9.6, 0.8], [9.55, 10.25, 0.8]] as const) {
+    const crate = new THREE.Group();
+    crate.position.set(x, 0, z);
+    const body = new THREE.Mesh(trackG(new THREE.BoxGeometry(scale, scale, scale)), crateMat);
+    body.position.y = scale / 2; body.castShadow = true; body.receiveShadow = true; crate.add(body);
+    const bandMat = trackM(new THREE.MeshStandardMaterial({ color: 0x654126, roughness: 0.95 }));
+    for (const y of [0.2, 0.6]) {
+      const band = new THREE.Mesh(trackG(new THREE.BoxGeometry(scale + 0.025, 0.055, scale + 0.025)), bandMat);
+      band.position.y = y * scale; crate.add(band);
+    }
+    scene.add(crate);
+  }
+
+  // Two warm lanterns frame the cabin path and softly brighten the camp at night-like settings.
+  const lanternMat = trackM(new THREE.MeshStandardMaterial({ color: 0xffc66b, emissive: 0xff8a2c, emissiveIntensity: 1.4, roughness: 0.35 }));
+  const lanternFrameMat = trackM(new THREE.MeshStandardMaterial({ color: 0x49301d, metalness: 0.25, roughness: 0.8 }));
+  const lanternLights: THREE.PointLight[] = [];
+  for (const [x, z] of [[-11.8, 9.8], [-16.2, 9.8]] as const) {
+    const lantern = new THREE.Group();
+    lantern.position.set(x, 1.65, z);
+    scene.add(lantern);
+    const glow = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.22, 0.3, 0.22)), lanternMat);
+    lantern.add(glow);
+    for (const side of [-1, 1]) {
+      const bar = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.035, 0.42, 0.035)), lanternFrameMat);
+      bar.position.x = side * 0.15; lantern.add(bar);
+    }
+    const top = new THREE.Mesh(trackG(new THREE.BoxGeometry(0.38, 0.055, 0.34)), lanternFrameMat);
+    top.position.y = 0.2; lantern.add(top);
+    const light = new THREE.PointLight(0xffb35c, 0.5, 4, 2);
+    light.position.set(x, 1.7, z);
+    scene.add(light); lanternLights.push(light);
+  }
+
+  // Furniture appears as the cabin is completed, rewarding the final cabin upgrade.
+  const cabinTable = cabinBox(1.15, 0.12, 0.62, 0.2, 0.62, 0.1, woodMat, 3);
+  const cabinTableLegs = [
+    cabinBox(0.09, 0.62, 0.09, -0.28, 0.31, -0.12, woodMat, 3),
+    cabinBox(0.09, 0.62, 0.09, 0.68, 0.31, -0.12, woodMat, 3),
+    cabinBox(0.09, 0.62, 0.09, -0.28, 0.31, 0.32, woodMat, 3),
+    cabinBox(0.09, 0.62, 0.09, 0.68, 0.31, 0.32, woodMat, 3),
+  ];
+  void cabinTable; void cabinTableLegs;
+  cabinBox(1.45, 0.22, 0.72, -0.9, 0.32, -0.65, benchWood, 3);
+  cabinBox(1.45, 0.12, 0.12, -0.9, 0.5, -0.98, benchWood, 3);
+
   const sawRoot = new THREE.Group();
   sawRoot.position.set(6.4, 0, 11.2);
   scene.add(sawRoot);
